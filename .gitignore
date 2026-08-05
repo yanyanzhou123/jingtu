@@ -32,3 +32,6 @@ Thumbs.db
 _zen_analysis/
 _zen_extract*.py
 zen-lesson.html
+
+# CI workflows (push needs workflow scope; add later)
+.github/workflows/
