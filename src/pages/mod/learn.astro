@@ -1,0 +1,465 @@
+﻿---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="课程" description="课程学习">
+  <article class="page-hero learn-page">
+    <div class="learn-shell" id="lesson-root">
+      <a class="jx-back" id="lesson-back" href="/xuexiu/">← 返回课次列表</a>
+      <p class="group-label" style="margin-top: 0;" id="lesson-crumb">加载中…</p>
+      <h1 id="lesson-title">…</h1>
+      <p id="lesson-summary"></p>
+      <p class="lesson-list__meta" id="lesson-meta"></p>
+      <div class="learn-progress-bar" id="learn-progress-bar"></div>
+      <div id="lesson-stage"></div>
+      <nav class="lesson-nav" aria-label="上下课" id="lesson-nav"></nav>
+    </div>
+  </article>
+
+  <script src="/jx-catalog.js?v=20260804d" defer></script>
+  <script src="/jx-progress.js?v=20260730g" defer></script>
+  <script is:inline>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(location.search);
+    const moduleSlug = params.get('mod') || '';
+    const id = params.get('id');
+    const root = document.getElementById('lesson-root');
+    if (!moduleSlug || !id) {
+      root.innerHTML = `<p>缺少模块或课程 id。</p><p><a href="/xuexiu/">返回学修</a></p>`;
+      return;
+    }
+
+    try {
+      for (let i = 0; i < 50 && typeof JX?.parseArticle !== 'function'; i++) {
+        await new Promise((r) => setTimeout(r, 40));
+      }
+      if (typeof JX?.parseArticle !== 'function') {
+        throw new Error('页面脚本未更新，请强制刷新（Ctrl+F5）后再试');
+      }
+
+      const catalog = await JX.fetchCatalog();
+      const found = JX.findLesson(catalog, moduleSlug, id);
+      if (!found) {
+        root.innerHTML = `<p>未找到课程。</p><p><a href="${JX.moduleHref(moduleSlug)}">返回目录</a></p>`;
+        return;
+      }
+
+      const { mod, chapter, lesson, lessonsFlat } = found;
+      document.title = `${lesson.title} · 慧灯净土`;
+      const backEl = document.getElementById('lesson-back');
+      if (backEl) {
+        backEl.href = JX.moduleHref(moduleSlug);
+        backEl.textContent = '← 返回课次列表';
+      }
+      document.getElementById('lesson-crumb').textContent = `《${mod.title}》 · ${chapter.title}`;
+      document.getElementById('lesson-title').textContent = lesson.title;
+      document.getElementById('lesson-summary').textContent = lesson.summary || '';
+      document.getElementById('lesson-meta').textContent = JX.formatLessonMeta(lesson);
+
+      const hasVideo = !!(lesson.videoPath && String(lesson.videoPath).trim());
+      const hasAudio = !!(lesson.audioPath && String(lesson.audioPath).trim());
+      const hasText = !!(lesson.text && String(lesson.text).trim());
+
+      const FONT_KEY = 'jx-learn-font-size';
+      const FONT_SIZES = [15, 17, 19, 21, 23, 26];
+      let fontSize = Number(localStorage.getItem(FONT_KEY)) || 19;
+      if (!FONT_SIZES.includes(fontSize)) fontSize = 19;
+
+      const allowed = [];
+      if (hasVideo) allowed.push('video');
+      allowed.push('text');
+      if (hasAudio) allowed.push('audio');
+
+      let tab = params.get('tab') || '';
+      if (!allowed.includes(tab)) tab = 'text';
+
+      // 若 URL 未指定 tab，仅 App 端用已保存进度的 lastTab
+      let progressPrefetch = null;
+      try {
+        for (let i = 0; i < 40 && typeof JXProgress?.me !== 'function'; i++) {
+          await new Promise((r) => setTimeout(r, 40));
+        }
+        if (
+          typeof JXProgress?.isNativeApp === 'function' &&
+          JXProgress.isNativeApp() &&
+          typeof JXProgress?.me === 'function' &&
+          (await JXProgress.me())
+        ) {
+          progressPrefetch = await JXProgress.getOne(moduleSlug, id);
+          if (!params.get('tab') && progressPrefetch?.lastTab && allowed.includes(progressPrefetch.lastTab)) {
+            tab = progressPrefetch.lastTab;
+          }
+        }
+      } catch (_) {}
+
+      const stage = document.getElementById('lesson-stage');
+
+      function setTabInUrl(next) {
+        const qs = new URLSearchParams(location.search);
+        qs.set('id', id);
+        qs.set('tab', next);
+        history.replaceState(null, '', `${location.pathname}?${qs.toString()}`);
+      }
+
+      function applyFontSize() {
+        const prose = stage.querySelector('.learn-prose');
+        if (prose) prose.style.fontSize = `${fontSize}px`;
+        const label = stage.querySelector('#font-size-label');
+        if (label) label.textContent = String(fontSize);
+        const smaller = stage.querySelector('#font-smaller');
+        const larger = stage.querySelector('#font-larger');
+        if (smaller) smaller.disabled = fontSize <= FONT_SIZES[0];
+        if (larger) larger.disabled = fontSize >= FONT_SIZES[FONT_SIZES.length - 1];
+      }
+
+      function changeFontSize(delta) {
+        const idx = FONT_SIZES.indexOf(fontSize);
+        const nextIdx = Math.min(
+          FONT_SIZES.length - 1,
+          Math.max(0, (idx < 0 ? 2 : idx) + delta),
+        );
+        fontSize = FONT_SIZES[nextIdx];
+        localStorage.setItem(FONT_KEY, String(fontSize));
+        applyFontSize();
+      }
+
+      function fontControlsHtml() {
+        return `
+          <div class="learn-font-controls" role="group" aria-label="字体大小">
+            <button type="button" class="learn-font-btn" id="font-smaller" aria-label="减小字体">A-</button>
+            <span class="learn-font-label" id="font-size-label">${fontSize}</span>
+            <button type="button" class="learn-font-btn" id="font-larger" aria-label="增大字体">A+</button>
+          </div>`;
+      }
+
+      function mediaEmpty(kind, path) {
+        if (!path || !String(path).trim()) {
+          return `<p class="audio-box__empty">本课暂无${kind === 'video' ? '视频' : '音频'}</p>`;
+        }
+        const url = JX.assetUrl(path);
+        if (!url) {
+          return `<p class="audio-box__empty">已登记路径，但媒体域名未配置：${JX.escape(path)}</p>`;
+        }
+        return null;
+      }
+
+      function panelBody(kind) {
+        if (kind === 'video') {
+          const err = mediaEmpty('video', lesson.videoPath);
+          if (err) return err;
+          const url = JX.assetUrl(lesson.videoPath);
+          return `
+            <div class="learn-video-wrap">
+              <p class="learn-media-hint">大文件首次播放可能需要十几秒，请稍候。建议在 Wi‑Fi 下观看；同一课再次打开通常会更快。</p>
+              <div class="learn-video">
+                <video controls playsinline webkit-playsinline x5-playsinline x5-video-player-type="h5" preload="none">
+                  <source src="${url}" type="video/mp4" />
+                </video>
+                <div class="learn-video-status" hidden aria-live="polite"></div>
+              </div>
+            </div>`;
+        }
+        if (kind === 'audio') {
+          const err = mediaEmpty('audio', lesson.audioPath);
+          if (err) return err;
+          return `<div class="audio-box learn-audio"><audio controls preload="none" src="${JX.assetUrl(lesson.audioPath)}"></audio></div>`;
+        }
+
+        if (!hasText) {
+          const empty = '<p class="audio-box__empty">暂无文字，请在运营后台编辑本课。</p>';
+          if (hasAudio) {
+            const url = JX.assetUrl(lesson.audioPath);
+            return `
+              <div class="learn-listen-dock">
+                <div class="learn-dock__row">
+                  <span class="learn-dock__label">音频</span>
+                  <div class="learn-dock__player">
+                    ${
+                      url
+                        ? `<audio controls preload="none" src="${url}"></audio>`
+                        : `<p class="audio-box__empty">媒体域名未配置，无法播放</p>`
+                    }
+                  </div>
+                  ${fontControlsHtml()}
+                </div>
+                <p class="learn-dock__hint">可一边听音频，一边向下阅读文字</p>
+              </div>
+              ${empty}`;
+          }
+          return `<div class="learn-text-toolbar">${fontControlsHtml()}</div>${empty}`;
+        }
+
+        const article = JX.parseArticle(lesson.text);
+        const showToc = article.toc.length >= 2;
+        const tocNav = showToc
+          ? `
+            <nav class="learn-toc" id="learn-toc" aria-label="本文目录">
+              <div class="learn-toc__head">
+                <p class="learn-toc__title">目录</p>
+                <button type="button" class="learn-toc__close" id="toc-close" aria-label="关闭目录">×</button>
+              </div>
+              <ol class="learn-toc__list">
+                ${article.toc
+                  .map(
+                    (item) =>
+                      `<li><a class="learn-toc__link" href="#${item.id}">${JX.escape(item.title)}</a></li>`,
+                  )
+                  .join('')}
+              </ol>
+            </nav>
+            <button type="button" class="learn-toc-fab" id="toc-fab" aria-expanded="false">目录</button>
+            <div class="learn-toc-mask" id="toc-mask" hidden></div>`
+          : '';
+
+        let mainInner = '';
+        if (hasAudio) {
+          const url = JX.assetUrl(lesson.audioPath);
+          mainInner = `
+            <div class="learn-listen-dock">
+              <div class="learn-dock__row">
+                <span class="learn-dock__label">音频</span>
+                <div class="learn-dock__player">
+                  ${
+                    url
+                      ? `<audio controls preload="none" src="${url}"></audio>`
+                      : `<p class="audio-box__empty">媒体域名未配置，无法播放</p>`
+                  }
+                </div>
+                ${fontControlsHtml()}
+              </div>
+              <p class="learn-dock__hint">可一边听音频，一边向下阅读文字</p>
+            </div>
+            <div class="learn-text-flow">
+              <div class="prose learn-prose">${article.html}</div>
+            </div>`;
+        } else {
+          mainInner = `
+            <div class="learn-text-toolbar">${fontControlsHtml()}</div>
+            <div class="learn-text-flow">
+              <div class="prose learn-prose">${article.html}</div>
+            </div>`;
+        }
+
+        // 目录与正文分栏：音频条只在右侧，避免盖住左侧目录
+        return `
+          <div class="learn-read${showToc ? ' has-toc' : ''}">
+            ${tocNav}
+            <div class="learn-read__main">${mainInner}</div>
+          </div>`;
+      }
+
+      const tabMeta = {
+        video: { icon: '视', label: '视频' },
+        text: { icon: '文', label: hasAudio ? '听读' : '文字' },
+        audio: { icon: '音', label: '音频' },
+      };
+
+      let activeTab = tab;
+      const showRail = allowed.length > 1;
+      const tabsHtml = allowed
+        .map((key) => {
+          const meta = tabMeta[key];
+          return `
+            <button type="button"
+              class="learn-tab"
+              data-tab="${key}"
+              aria-pressed="false">
+              <span class="learn-tab__icon" aria-hidden="true">${meta.icon}</span>
+              <span class="learn-tab__label">${meta.label}</span>
+            </button>`;
+        })
+        .join('');
+      const panelsHtml = allowed
+        .map((key) => `<div class="learn-panel" data-panel="${key}" hidden></div>`)
+        .join('');
+
+      stage.innerHTML = showRail
+        ? `
+        <div class="learn-stage">
+          <aside class="learn-rail" aria-label="内容形式">
+            <p class="learn-rail__title">浏览</p>
+            ${tabsHtml}
+          </aside>
+          <div class="learn-card">${panelsHtml}</div>
+        </div>`
+        : `
+        <div class="learn-stage learn-stage--solo">
+          <div class="learn-card">${panelsHtml}</div>
+        </div>`;
+
+      function pauseHiddenMedia(except) {
+        stage.querySelectorAll('video, audio').forEach((el) => {
+          const panel = el.closest('[data-panel]');
+          if (panel && panel.getAttribute('data-panel') === except) return;
+          try {
+            el.pause();
+          } catch {}
+        });
+      }
+
+      function showPanel(current) {
+        activeTab = current;
+        setTabInUrl(current);
+        stage.querySelector('.learn-card')?.setAttribute('data-tab', current);
+
+        stage.querySelectorAll('.learn-tab').forEach((btn) => {
+          const on = btn.getAttribute('data-tab') === current;
+          btn.classList.toggle('is-active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+
+        allowed.forEach((key) => {
+          const panel = stage.querySelector(`[data-panel="${key}"]`);
+          if (!panel) return;
+          if (!panel.dataset.ready) {
+            panel.innerHTML = panelBody(key);
+            panel.dataset.ready = '1';
+            if (key === 'text') {
+              panel.querySelector('#font-smaller')?.addEventListener('click', () => changeFontSize(-1));
+              panel.querySelector('#font-larger')?.addEventListener('click', () => changeFontSize(1));
+              bindTextToc(panel);
+            }
+            if (key === 'video') bindVideoStatus(panel);
+          }
+          panel.hidden = key !== current;
+        });
+
+        pauseHiddenMedia(current);
+        if (current === 'text') applyFontSize();
+      }
+
+      function bindVideoStatus(panel) {
+        const video = panel.querySelector('video');
+        const status = panel.querySelector('.learn-video-status');
+        if (!video || !status) return;
+
+        let loading = false;
+        const setStatus = (text, mode) => {
+          if (!text) {
+            status.hidden = true;
+            status.textContent = '';
+            status.dataset.mode = '';
+            return;
+          }
+          status.hidden = false;
+          status.textContent = text;
+          status.dataset.mode = mode || 'loading';
+        };
+
+        const showLoading = (msg) => {
+          loading = true;
+          setStatus(msg || '正在加载视频，大文件约需十几秒，请稍候…', 'loading');
+        };
+
+        const updateProgress = () => {
+          if (!loading) return;
+          const dur = video.duration;
+          if (!dur || !Number.isFinite(dur) || dur <= 0) return;
+          try {
+            const buf = video.buffered;
+            if (!buf.length) return;
+            const end = buf.end(buf.length - 1);
+            const pct = Math.min(99, Math.round((end / dur) * 100));
+            setStatus(`正在缓冲… 约 ${pct}%（大文件请耐心等待）`, 'loading');
+          } catch (_) {}
+        };
+
+        const clearLoading = () => {
+          loading = false;
+          setStatus('');
+        };
+
+        video.addEventListener('play', () => {
+          if (video.readyState < 3) showLoading();
+        });
+        video.addEventListener('waiting', () => showLoading());
+        video.addEventListener('stalled', () => {
+          if (!video.paused) showLoading('网络较慢，仍在加载，请稍候…');
+        });
+        video.addEventListener('seeking', () => {
+          if (video.readyState < 3) showLoading('正在跳转加载…');
+        });
+        video.addEventListener('progress', updateProgress);
+        video.addEventListener('playing', clearLoading);
+        video.addEventListener('canplaythrough', clearLoading);
+        video.addEventListener('error', () => {
+          loading = false;
+          setStatus('视频加载失败，请检查网络后重试。', 'error');
+        });
+      }
+
+      function bindTextToc(panel) {
+        const toc = panel.querySelector('#learn-toc');
+        const fab = panel.querySelector('#toc-fab');
+        const mask = panel.querySelector('#toc-mask');
+        const closeBtn = panel.querySelector('#toc-close');
+        if (!toc) return;
+
+        const setOpen = (open) => {
+          toc.classList.toggle('is-open', open);
+          if (mask) mask.hidden = !open;
+          if (fab) fab.setAttribute('aria-expanded', open ? 'true' : 'false');
+          document.body.classList.toggle('learn-toc-open', open);
+        };
+
+        fab?.addEventListener('click', () => setOpen(!toc.classList.contains('is-open')));
+        closeBtn?.addEventListener('click', () => setOpen(false));
+        mask?.addEventListener('click', () => setOpen(false));
+
+        toc.querySelectorAll('.learn-toc__link').forEach((link) => {
+          link.addEventListener('click', (e) => {
+            const id = link.getAttribute('href')?.slice(1);
+            const target = id ? panel.querySelector(`#${CSS.escape(id)}`) : null;
+            if (!target) return;
+            e.preventDefault();
+            setOpen(false);
+            const headerH = document.querySelector('.site-header')?.offsetHeight || 0;
+            const dockH = panel.querySelector('.learn-listen-dock')?.offsetHeight || 0;
+            const gap = 12;
+            const top =
+              target.getBoundingClientRect().top + window.scrollY - headerH - dockH - gap;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          });
+        });
+      }
+
+      stage.querySelectorAll('.learn-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const next = btn.getAttribute('data-tab');
+          if (!next || next === activeTab) return;
+          showPanel(next);
+        });
+      });
+
+      showPanel(tab);
+
+      // 登录用户：恢复/同步学习进度
+      if (typeof JXProgress?.attach === 'function') {
+        await JXProgress.attach({
+          moduleSlug,
+          lessonSlug: id,
+          getTab: () => activeTab,
+          root: document.getElementById('learn-progress-bar'),
+        });
+      }
+
+      const idx = lessonsFlat.findIndex((l) => l.slug === lesson.slug);
+      const prev = idx > 0 ? lessonsFlat[idx - 1] : null;
+      const next = idx >= 0 && idx < lessonsFlat.length - 1 ? lessonsFlat[idx + 1] : null;
+      document.getElementById('lesson-nav').innerHTML = `
+        <div>${
+          prev
+            ? `<a href="${JX.lessonHref(moduleSlug, prev.slug)}"><span>上一课</span>${JX.escape(prev.title)}</a>`
+            : '<span></span>'
+        }</div>
+        <div style="text-align:right;">${
+          next
+            ? `<a href="${JX.lessonHref(moduleSlug, next.slug)}"><span>下一课</span>${JX.escape(next.title)}</a>`
+            : `<a href="${JX.moduleHref(moduleSlug)}"><span>目录</span>返回课次列表</a>`
+        }</div>`;
+    } catch (e) {
+      root.innerHTML = `<p>加载失败：${JX.escape(e.message || e)}</p>`;
+    }
+  });
+  </script>
+</BaseLayout>

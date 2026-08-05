@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="佛学圆桌" description="佛学代表人物圆桌研讨">
+  <article class="page-hero yt-page">
+    <div class="wrap yt-hero">
+      <a class="yt-back" href="/yantao/">← 返回研讨</a>
+      <p class="group-label" style="margin-top: 0;">研讨</p>
+      <h1>佛学圆桌</h1>
+      <p>提出议题后，主持人将邀请佛学相关代表人物对谈。可用指令：可 / 止 / 深入此节 / 引入新人物。</p>
+      <aside class="yt-notice" role="note">
+        <strong>请注意</strong>
+        本模块对话由网络公开资料与模型生成，并不严格依据本站学修文稿；仅供启发参考，不可当作正式学修依据，更不能替代依止上师与如理实修。
+      </aside>
+
+      <div id="yt-sem-setup" class="yt-setup">
+        <label class="yt-label" for="yt-topic">研讨议题</label>
+        <textarea id="yt-topic" class="yt-textarea" rows="3" placeholder="例如：世间八法与修行的关系"></textarea>
+        <div class="yt-actions">
+          <button type="button" id="yt-sem-start" class="yt-btn">开启圆桌</button>
+        </div>
+        <p id="yt-sem-msg" class="yt-msg" hidden></p>
+      </div>
+
+      <div id="yt-sem-chat-wrap" class="yt-chat-wrap yt-hidden">
+        <p id="yt-sem-meta" class="yt-msg" style="margin-top:0;"></p>
+        <div id="yt-sem-chat" class="yt-chat" aria-live="polite"></div>
+        <div class="yt-composer">
+          <div class="yt-chips" id="yt-sem-chips">
+            <button type="button" class="yt-chip" data-cmd="可">可</button>
+            <button type="button" class="yt-chip" data-cmd="止">止</button>
+            <button type="button" class="yt-chip" data-cmd="深入此节">深入此节</button>
+            <button type="button" class="yt-chip" data-cmd="引入新人物">引入新人物</button>
+          </div>
+          <textarea id="yt-sem-input" class="yt-textarea" rows="3" placeholder="输入回应，或点上方指令…"></textarea>
+          <div class="yt-actions">
+            <button type="button" id="yt-sem-send" class="yt-btn">发送</button>
+            <button type="button" id="yt-sem-reset" class="yt-btn yt-btn--ghost">新议题</button>
+          </div>
+          <p id="yt-sem-status" class="yt-msg" hidden></p>
+        </div>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<link rel="stylesheet" href="/yantao.css?v=20260805y" />
+<script src="/yantao-seminar.js?v=20260730e" defer></script>

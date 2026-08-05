@@ -1,0 +1,41 @@
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/favicon.svg
+  Cache-Control: public, max-age=0, must-revalidate
+
+/hero-mist.svg
+  Cache-Control: public, max-age=0, must-revalidate
+
+/_astro/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-catalog.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-ask.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-ask.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-app.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-app.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/jx-progress.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/ops-app.js
+  Cache-Control: public, max-age=120, must-revalidate
+
+/ops-video-compress.js
+  Cache-Control: public, max-age=120, must-revalidate
+
+/ops-app.css
+  Cache-Control: public, max-age=120, must-revalidate
+
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate

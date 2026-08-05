@@ -1,0 +1,32 @@
+---
+/** 旧地址兼容：/lunhui/ 等 → /mod/?id=…（lunhui 已并入 mod-fngg2o9） */
+const LEGACY_SLUG_MAP: Record<string, string> = {
+  lunhui: 'mod-fngg2o9',
+};
+
+export function getStaticPaths() {
+  return ['lunhui', 'qianxing', 'foguang', 'buli'].map((module) => ({
+    params: { module },
+  }));
+}
+
+const moduleSlug = Astro.params.module!;
+const targetSlug = LEGACY_SLUG_MAP[moduleSlug] || moduleSlug;
+const target = `/mod/?id=${encodeURIComponent(targetSlug)}`;
+---
+
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <link rel="canonical" href={target} />
+    <title>跳转中…</title>
+    <script is:inline define:vars={{ target }}>
+      location.replace(target);
+    </script>
+  </head>
+  <body>
+    <p><a href={target}>正在前往模块页…</a></p>
+  </body>
+</html>

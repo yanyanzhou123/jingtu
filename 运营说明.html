@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>见行修学 · 运营使用说明</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    color: #1a2e24;
+    line-height: 1.65;
+    font-size: 11pt;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 8px 4px 24px;
+  }
+  h1 {
+    font-size: 20pt;
+    margin: 0 0 0.4em;
+    color: #0f3d2e;
+    border-bottom: 2px solid #2d6a4f;
+    padding-bottom: 0.35em;
+  }
+  h2 {
+    font-size: 13.5pt;
+    margin: 1.4em 0 0.45em;
+    color: #1b4332;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 11.5pt;
+    margin: 1em 0 0.35em;
+    color: #2d6a4f;
+    page-break-after: avoid;
+  }
+  p, li { margin: 0.35em 0; }
+  ul, ol { padding-left: 1.35em; margin: 0.4em 0; }
+  a { color: #1b4332; }
+  blockquote {
+    margin: 0.8em 0;
+    padding: 0.55em 0.9em;
+    background: #f3f7f4;
+    border-left: 4px solid #40916c;
+    color: #333;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.6em 0 1em;
+    font-size: 10.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #c5d5cc;
+    padding: 0.4em 0.55em;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #e8f2ec; color: #1b4332; }
+  pre {
+    background: #f4f6f5;
+    border: 1px solid #d6e0db;
+    border-radius: 4px;
+    padding: 0.7em 0.9em;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 10pt;
+    line-height: 1.45;
+    white-space: pre;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid #d0ddd6;
+    margin: 1.2em 0;
+  }
+  strong { color: #0f3d2e; }
+  .meta { color: #445; margin-bottom: 0.2em; }
+  .footer-note {
+    margin-top: 2em;
+    padding-top: 0.6em;
+    border-top: 1px solid #d0ddd6;
+    font-size: 9.5pt;
+    color: #667;
+  }
+</style>
+</head>
+<body>
+
+<h1>见行修学 · 运营使用说明（简明版）</h1>
+<p class="meta">网站：<a href="https://jianxing.win">https://jianxing.win</a><br>
+后台：<a href="https://jianxing.win/ops/">https://jianxing.win/ops/</a></p>
+
+<blockquote>后台链接只发给负责维护内容的师兄，请勿发到公开群。</blockquote>
+
+<h2>1. 登录</h2>
+<ol>
+  <li>打开后台地址</li>
+  <li>输入运营密码（向管理员索取）</li>
+  <li>登录成功即可使用</li>
+</ol>
+<p>密码错误或登录过期时，重新登录即可。</p>
+
+<h2>2. 后台有三个区</h2>
+<p>顶部三个标签，各管一类内容：</p>
+<table>
+  <thead>
+    <tr><th>标签</th><th>管什么</th><th>前台在哪看</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>学修</strong></td><td>模块、章节、课文、音视频</td><td>首页 / 学修页</td></tr>
+    <tr><td><strong>参考书籍</strong></td><td>PDF 等书籍材料</td><td>参考资料 → 参考书籍</td></tr>
+    <tr><td><strong>公众号好文</strong></td><td>好文集合与文章</td><td>参考资料 → 公众号好文</td></tr>
+  </tbody>
+</table>
+<p>切换标签前，若有未保存修改，系统会提示。请先点保存。</p>
+
+<h2>3. 学修：怎么改课</h2>
+<p>内容层级：</p>
+<pre>模块（如：大圆满前行-讲解）
+  └── 章节
+        └── 课
+              ├── 文字
+              ├── 音频
+              └── 视频</pre>
+
+<h3>3.1 选模块 / 新建模块</h3>
+<ul>
+  <li>左侧点模块名称进入</li>
+  <li>可用搜索、状态筛选快速找模块</li>
+  <li>点「+ 添加」新建模块（默认「即将开放」）</li>
+</ul>
+
+<h3>3.2 设置模块（很重要）</h3>
+<p>进入模块后可改：</p>
+<table>
+  <thead>
+    <tr><th>项目</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>标题 / 摘要</td><td>前台显示的名称与简介</td></tr>
+    <tr><td>状态</td><td><strong>开放中</strong>＝学员可学；<strong>即将开放</strong>＝占位待开</td></tr>
+    <tr><td><strong>学修分区</strong></td><td>决定出现在学修页哪一块</td></tr>
+    <tr><td>专业课子组</td><td>仅当分区选「专业课」时出现</td></tr>
+  </tbody>
+</table>
+<p><strong>学修分区可选：</strong><br>
+基础课 / 公共学修 / 专业课 / 实修篇 / 见行选修 / 未归类</p>
+<p>选「专业课」时，再选子组：大圆满前行 / 菩提道次第广论。<br>
+选「未归类」或未设置，会出现在前台「未归类」。</p>
+<p>改完后点顶部 <strong>「保存到服务器」</strong>。</p>
+
+<h3>3.3 搭章节和课</h3>
+<ol>
+  <li>「+ 添加章节」</li>
+  <li>在章节下「+ 添加课」</li>
+  <li>按住左侧 ⋮⋮ 可拖拽排序</li>
+  <li>点 <strong>「保存到服务器」</strong></li>
+</ol>
+
+<h3>3.4 编辑一课内容</h3>
+<p>点课上的 <strong>「编辑内容」</strong>：</p>
+<ul>
+  <li><strong>文字</strong>：写本课讲记</li>
+  <li><strong>音频 / 视频</strong>：选文件上传（大视频会自动分片）</li>
+</ul>
+<p>说明：</p>
+<ul>
+  <li>上传成功会<strong>自动保存</strong></li>
+  <li>只改文字或结构调整时，需手动点 <strong>「保存到服务器」</strong></li>
+  <li>可以先只上文字，音视频以后再补</li>
+</ul>
+
+<h3>3.5 建议顺序</h3>
+<ol>
+  <li>先搭模块 → 分区 → 章节 → 课，保存</li>
+  <li>再逐课写文字、上传音视频</li>
+  <li>打开前台学修页核对位置和内容</li>
+</ol>
+
+<h2>4. 参考书籍</h2>
+<ol>
+  <li>顶部点 <strong>「参考书籍」</strong></li>
+  <li>先从列表进入某一本，再改标题、说明、上传文件</li>
+  <li>上传成功一般会自动保存；改文字后请点 <strong>「保存到服务器」</strong></li>
+</ol>
+<p>前台路径：参考资料 → 参考书籍。</p>
+
+<h2>5. 公众号好文</h2>
+<ol>
+  <li>顶部点 <strong>「公众号好文」</strong></li>
+  <li>先从列表进入某一集合，再编辑</li>
+  <li>保存时点 <strong>「保存好文」</strong>（与学修课表分开保存）</li>
+</ol>
+<p>集合有两种：</p>
+<table>
+  <thead>
+    <tr><th>类型</th><th>用法</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>链接型</strong></td><td>集合本身就是一个外链，学员点集合即打开链接</td></tr>
+    <tr><td><strong>文字型</strong></td><td>在集合内再添加多篇文章</td></tr>
+  </tbody>
+</table>
+<p>前台路径：参考资料 → 公众号好文。</p>
+
+<h2>6. 务必记住</h2>
+<ol>
+  <li><strong>改了记得保存</strong>（顶部黄条提示时务必点保存）</li>
+  <li><strong>学修</strong> 与 <strong>公众号好文</strong> 是两套保存，按钮文案不同</li>
+  <li>删除模块 / 章节 / 课，保存后才会真正生效，请谨慎</li>
+  <li>上传大视频时保持页面打开，直到提示成功</li>
+  <li>多人同时改同一内容可能冲突，按提示重新加载后再改</li>
+  <li>密码勿外传</li>
+</ol>
+
+<h2>7. 常见问题</h2>
+<p><strong>改了课标题，以前的链接会坏吗？</strong><br>
+一般不会。系统用内部标识认课，标题可以改。</p>
+<p><strong>能不能先只上文字？</strong><br>
+可以。音频、视频留空即可。</p>
+<p><strong>新模块前台找不到？</strong><br>
+检查三点：是否已保存、状态是否「开放中」、学修分区是否选对。</p>
+<p><strong>模块出现在「未归类」？</strong><br>
+进入该模块，把「学修分区」改成正确分区，再保存。</p>
+<p><strong>改完前台没变化？</strong><br>
+先确认已保存成功，再刷新前台页面（可强制刷新）。</p>
+
+<h2>8. 需要帮助时</h2>
+<p>联系站点管理员，说明：你在改哪一块（学修 / 书籍 / 好文）、哪一个模块或集合、大约什么时间操作、页面提示了什么。</p>
+
+<p class="footer-note">见行修学运营说明 · 内部文档</p>
+</body>
+</html>

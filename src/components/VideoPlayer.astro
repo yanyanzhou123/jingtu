@@ -1,0 +1,54 @@
+---
+import { assetUrl } from '../data/site';
+import type { MediaItem } from '../data/content';
+
+interface Props {
+  items: MediaItem[];
+}
+
+const { items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <div class="video-list">
+      <p class="group-label" style="margin-top: 0.5rem;">视频小节</p>
+      {items.map((item) => {
+        const src = assetUrl(item.path);
+        return (
+          <div class="video-box">
+            <p class="audio-box__label">视频 · {item.title}</p>
+            {src ? (
+              <video
+                controls
+                playsinline
+                webkit-playsinline
+                x5-playsinline
+                x5-video-player-type="h5"
+                preload="metadata"
+                src={src}
+              >
+                您的浏览器不支持视频播放。
+              </video>
+            ) : (
+              <p class="audio-box__empty">待上传：{item.path}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  )
+}
+
+<style>
+  .video-box {
+    margin: 0 0 1.5rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .video-box video {
+    width: 100%;
+    max-height: 28rem;
+    background: #111;
+  }
+</style>

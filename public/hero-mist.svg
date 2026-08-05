@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0d978"/>
+      <stop offset="55%" stop-color="#c9a227"/>
+      <stop offset="100%" stop-color="#8a6e1c"/>
+    </linearGradient>
+    <linearGradient id="fog" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#fbf6e6" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#fbf6e6" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#fbf6e6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <path d="M0 620 C180 560 280 500 420 530 C560 560 650 470 820 500 C980 530 1100 430 1280 470 C1400 495 1500 520 1600 500 L1600 900 L0 900 Z" fill="#6e5614" opacity="0.9"/>
+  <path d="M0 680 C220 640 360 600 520 640 C700 690 820 580 980 620 C1140 660 1300 590 1600 630 L1600 900 L0 900 Z" fill="#2a2214"/>
+  <ellipse cx="300" cy="560" rx="260" ry="50" fill="url(#fog)"/>
+  <ellipse cx="980" cy="520" rx="340" ry="60" fill="url(#fog)"/>
+  <ellipse cx="700" cy="700" rx="420" ry="70" fill="url(#fog)" opacity="0.7"/>
+</svg>

@@ -1,0 +1,29 @@
+{
+  "name": "jingtu",
+  "type": "module",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "astro build && wrangler pages deploy --project-name=jingtu --branch main",
+    "deploy:cron": "wrangler deploy -c workers/card-cron/wrangler.toml",
+    "db:migrate": "wrangler d1 execute jingtu-app --remote --file=migrations/0001_app.sql",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.0",
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "astro": "^7.1.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.2",
+    "wrangler": "^4.113.0"
+  }
+}

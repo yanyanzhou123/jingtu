@@ -1,0 +1,19 @@
+name = "jingtu"
+compatibility_date = "2026-07-22"
+pages_build_output_dir = "dist"
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "jingtu-files"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jingtu-app"
+database_id = "73132675-ad75-4be3-98a7-5b6907e15a1e"
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VECTORIZE"
+index_name = "jingtu-passages"

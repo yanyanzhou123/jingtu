@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">见行修学</string>
+    <string name="title_activity_main">见行修学</string>
+    <string name="package_name">win.jianxing.app</string>
+    <string name="custom_url_scheme">win.jianxing.app</string>
+</resources>

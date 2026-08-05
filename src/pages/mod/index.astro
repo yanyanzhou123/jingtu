@@ -1,0 +1,93 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="学修模块" description="学修模块课次目录">
+  <div class="page-hero">
+    <div class="wrap">
+      <a class="jx-back" href="/xuexiu/">← 返回学修</a>
+      <p class="group-label" style="margin-top: 0;" id="mod-status">学修模块</p>
+      <h1 id="mod-title">加载中…</h1>
+      <p id="mod-intro"></p>
+      <p class="lesson-list__meta" id="mod-meta" style="margin-top: 0.75rem;"></p>
+    </div>
+  </div>
+
+  <section class="section" style="padding-top: 0;">
+    <div class="wrap" id="mod-body">
+      <p style="font-family: var(--font-sans); color: var(--ink-soft);">加载课次中…</p>
+    </div>
+  </section>
+
+  <script src="/jx-catalog.js?v=20260804d" defer></script>
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const body = document.getElementById('mod-body');
+      const moduleSlug = new URLSearchParams(location.search).get('id') || '';
+      if (!moduleSlug) {
+        body.innerHTML =
+          '<p>缺少模块 id。</p><p><a href="/xuexiu/">返回学修目录</a></p>';
+        return;
+      }
+      try {
+        const catalog = await JX.fetchCatalog();
+        const mod = catalog.modules.find((m) => m.slug === moduleSlug);
+        if (!mod) {
+          body.innerHTML =
+            '<p>未找到该模块</p><p><a href="/xuexiu/">返回学修目录</a></p>';
+          return;
+        }
+        document.title = `${mod.title} · 慧灯净土`;
+        document.getElementById('mod-status').textContent =
+          `学修模块 · ${mod.statusLabel || ''}`;
+        document.getElementById('mod-title').textContent = `《${mod.title}》`;
+        document.getElementById('mod-intro').textContent = mod.summary || '';
+        const count = JX.lessonCount(mod);
+        document.getElementById('mod-meta').textContent =
+          count > 0 ? `共 ${count} 课` : '尚未配置课次';
+
+        if (!count) {
+          body.innerHTML = `
+            <div class="content-width">
+              <div class="coming-box">
+                <p class="coming-box__label">等待配置</p>
+                <p>请运营同学在后台为本模块添加章节与课程。</p>
+                <p style="margin-top:1.5rem;"><a class="btn btn--solid" href="/xuexiu/" style="color:#fbf6e6;">返回学修目录</a></p>
+              </div>
+            </div>`;
+          return;
+        }
+
+        let order = 0;
+        body.innerHTML = (mod.chapters || [])
+          .map((ch) => {
+            const items = (ch.lessons || [])
+              .map((les) => {
+                order += 1;
+                const num = String(order).padStart(2, '0');
+                return `
+                  <li>
+                    <a href="${JX.lessonHref(mod.slug, les.slug)}">
+                      <span class="lesson-list__num">${num}</span>
+                      <div>
+                        <h2 class="lesson-list__title">${JX.escape(les.title)}</h2>
+                        <p class="lesson-list__meta">${JX.formatLessonMeta(les)}</p>
+                        <p class="lesson-list__summary">${JX.escape(les.summary || '')}</p>
+                      </div>
+                    </a>
+                  </li>`;
+              })
+              .join('');
+            return `
+              <p class="group-label">${JX.escape(ch.title)}
+                <span style="color:var(--ink-soft);letter-spacing:0;margin-left:0.5rem;">（${(ch.lessons || []).length} 课）</span>
+              </p>
+              <ul class="lesson-list">${items}</ul>`;
+          })
+          .join('');
+      } catch (e) {
+        body.innerHTML = `<p>加载失败：${JX.escape(e.message || e)}</p>`;
+      }
+    });
+  </script>
+</BaseLayout>

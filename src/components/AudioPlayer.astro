@@ -1,0 +1,35 @@
+---
+import { assetUrl } from '../data/site';
+import type { MediaItem } from '../data/content';
+
+interface Props {
+  items: MediaItem[];
+  emptyHint?: string;
+}
+
+const { items, emptyHint = '本课暂无音频。' } = Astro.props;
+---
+
+{
+  items.length === 0 ? (
+    <div class="audio-box">
+      <p class="audio-box__empty">{emptyHint}</p>
+    </div>
+  ) : (
+    items.map((item) => {
+      const src = assetUrl(item.path);
+      return (
+        <div class="audio-box">
+          <p class="audio-box__label">音频 · {item.title}</p>
+          {src ? (
+            <audio controls preload="none" src={src}>
+              您的浏览器不支持音频播放。
+            </audio>
+          ) : (
+            <p class="audio-box__empty">待上传：{item.path}</p>
+          )}
+        </div>
+      );
+    })
+  )
+}

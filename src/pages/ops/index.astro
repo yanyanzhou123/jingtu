@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="运营后台" description="慧灯净土内容架构与上传">
+  <div class="page-hero">
+    <div class="wrap">
+      <p class="group-label" style="margin-top: 0;">内部工具</p>
+      <h1>运营后台</h1>
+      <p>
+        学修为主要内容：左侧选模块，模块内为章节 → 课；进入课后再编辑文字、上传音视频。
+        参考书籍与公众号好文在上方分区进入，属于材料区，不计入学修课表。
+      </p>
+    </div>
+  </div>
+
+  <section class="section" style="padding-top: 0;">
+    <div class="wrap">
+      <div id="ops-login" class="ops-panel">
+        <p class="ops-label">登录</p>
+        <form id="login-form" class="ops-form-simple">
+          <input type="password" name="password" placeholder="运营密码" autocomplete="current-password" required />
+          <button type="submit" class="btn btn--solid" style="color:#fbf6e6;">登录</button>
+        </form>
+        <p id="login-msg" class="ops-msg" hidden></p>
+      </div>
+
+      <div id="ops-app" hidden>
+        <div class="ops-workspace-tabs" role="tablist" aria-label="运营分区">
+          <button type="button" class="ops-ws-tab is-active" data-ws="module">学修</button>
+          <button type="button" class="ops-ws-tab" data-ws="refs">参考书籍</button>
+          <button type="button" class="ops-ws-tab" data-ws="articles">公众号好文</button>
+        </div>
+
+        <div class="ops-sticky-bar">
+          <div id="dirty-banner" class="ops-dirty" hidden>
+            有未保存的修改，请点「保存到服务器」。上传成功会自动保存。多人同时编辑时若冲突会提示重新加载；保存前自动备份上一版。
+          </div>
+          <div class="ops-toolbar">
+            <div class="ops-toolbar__ctx">
+              <span class="ops-toolbar__label" id="ops-ctx-label">学修</span>
+              <strong id="ops-ctx-title">请选择模块</strong>
+            </div>
+            <div class="ops-toolbar__actions">
+              <button type="button" id="btn-save" class="btn btn--solid" style="color:#fbf6e6;">保存到服务器</button>
+              <button type="button" id="btn-reload" class="btn" style="color:inherit;border-color:var(--line);">重新加载</button>
+              <button type="button" id="logout-btn" class="btn" style="color:inherit;border-color:var(--line);">退出</button>
+            </div>
+            <span id="save-msg" class="ops-msg" style="margin:0;"></span>
+          </div>
+        </div>
+
+        <div id="passages-panel" class="ops-cards-panel ops-cards-panel--collapsible">
+          <button type="button" class="ops-cards-toggle" id="btn-passages-toggle" aria-expanded="false">
+            <strong>问答索引（向量）</strong>
+            <span id="passages-summary" class="ops-cards-summary">加载中…</span>
+            <span class="ops-cards-toggle__hint">展开</span>
+          </button>
+          <div class="ops-cards-body" id="passages-body" hidden>
+            <p class="ops-cards-hint">
+              解惑已改用段落向量混合检索。保存课文后会自动增量重建；也可点下方按钮手动预热。
+            </p>
+            <div class="ops-cards-actions">
+              <button type="button" id="btn-passages-warm" class="btn ops-mini" style="color:inherit;border-color:var(--line);">重建/预热一批</button>
+              <button type="button" id="btn-passages-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新状态</button>
+            </div>
+            <p id="passages-msg" class="ops-msg" hidden style="margin:0.5rem 0 0;"></p>
+          </div>
+        </div>
+
+        <div class="ops-grid" id="ops-grid">
+          <aside class="ops-side" id="ops-side">
+            <div class="ops-side-head">
+              <p class="ops-label" style="margin:0;">学修模块</p>
+              <button type="button" id="btn-add-module" class="btn ops-mini" style="color:inherit;border-color:var(--line);">+ 添加</button>
+            </div>
+            <div class="ops-side-filters">
+              <input type="search" id="mod-search" class="ops-side-search" placeholder="搜索模块…" autocomplete="off" />
+              <select id="mod-status-filter" class="ops-side-select" aria-label="按状态筛选">
+                <option value="all">全部状态</option>
+                <option value="open">仅开放中</option>
+                <option value="coming">仅即将开放</option>
+              </select>
+            </div>
+            <div id="module-list" class="ops-nav"></div>
+          </aside>
+
+          <div class="ops-main" id="module-editor">
+            <p class="ops-empty">请选择左侧模块</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<link rel="stylesheet" href="/ops-app.css?v=20260805y" />
+<script type="module" src="/ops-video-compress.js?v=20260725i"></script>
+<script src="/ops-app.js?v=20260731g" defer></script>

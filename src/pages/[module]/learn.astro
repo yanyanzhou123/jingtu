@@ -1,0 +1,33 @@
+---
+/** 旧地址兼容：/lunhui/learn/ 等 → /mod/learn/（lunhui 已并入 mod-fngg2o9） */
+const LEGACY_SLUG_MAP: Record<string, string> = {
+  lunhui: 'mod-fngg2o9',
+};
+
+export function getStaticPaths() {
+  return ['lunhui', 'qianxing', 'foguang', 'buli'].map((module) => ({
+    params: { module },
+  }));
+}
+
+const moduleSlug = Astro.params.module!;
+const targetSlug = LEGACY_SLUG_MAP[moduleSlug] || moduleSlug;
+---
+
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <title>跳转中…</title>
+    <script is:inline define:vars={{ targetSlug }}>
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const q = new URLSearchParams({ mod: targetSlug });
+      if (id) q.set('id', id);
+      location.replace(`/mod/learn/?${q.toString()}`);
+    </script>
+  </head>
+  <body>
+    <p>正在前往课程页…</p>
+  </body>
+</html>

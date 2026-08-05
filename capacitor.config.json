@@ -1,0 +1,17 @@
+{
+  "appId": "win.huidengjingtu.app",
+  "appName": "慧灯净土",
+  "webDir": "android-www",
+  "server": {
+    "url": "https://huidengjingtu.win/app/",
+    "allowNavigation": [
+      "huidengjingtu.win",
+      "*.huidengjingtu.win",
+      "*.jingtu-ao3.pages.dev",
+      "*.r2.dev"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

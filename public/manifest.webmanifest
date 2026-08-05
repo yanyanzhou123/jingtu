@@ -1,0 +1,19 @@
+{
+  "name": "慧灯净土 · 学习中心",
+  "short_name": "慧灯净土",
+  "description": "慧灯净土个人学习进度",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf7ea",
+  "theme_color": "#c9a227",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

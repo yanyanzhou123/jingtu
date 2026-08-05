@@ -1,0 +1,151 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="公众号好文" description="精选公众号文章合集">
+  <article class="page-hero yt-page">
+    <div class="wrap yt-hero">
+      <a class="yt-back" id="ref-art-back" href="/reference/">← 返回参考资料</a>
+      <p class="group-label" style="margin-top: 0;">参考资料</p>
+      <h1 id="ref-art-title">公众号好文</h1>
+      <p id="ref-art-lead">精选公众号文章合集；链接型集合可直接打开，文字型集合可进入查看文章。</p>
+
+      <div id="ref-art-body" class="yt-setup" style="border-top:none;padding-top:0.5rem;">
+        <p class="yt-msg" style="margin-top:0;">加载中…</p>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<link rel="stylesheet" href="/yantao.css?v=20260805y" />
+<script src="/jx-catalog.js?v=20260731e" defer></script>
+<script is:inline>
+document.addEventListener('DOMContentLoaded', async () => {
+  const body = document.getElementById('ref-art-body');
+  const titleEl = document.getElementById('ref-art-title');
+  const leadEl = document.getElementById('ref-art-lead');
+  const backEl = document.getElementById('ref-art-back');
+
+  function esc(s) {
+    return JX.escape(String(s || ''));
+  }
+
+  function safeUrl(url) {
+    const u = String(url || '').trim();
+    if (!u) return '';
+    if (/^https?:\/\//i.test(u)) return u;
+    if (u.startsWith('/')) return u;
+    return '';
+  }
+
+  async function fetchArticles() {
+    const res = await fetch('/api/articles');
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || '无法加载公众号好文');
+    return Array.isArray(data.collections) ? data.collections : [];
+  }
+
+  function renderCollections(cols) {
+    titleEl.textContent = '公众号好文';
+    leadEl.textContent = '精选公众号文章合集；链接型集合可直接打开，文字型集合可进入查看文章。';
+    leadEl.hidden = false;
+    backEl.href = '/reference/';
+    backEl.textContent = '← 返回参考资料';
+
+    if (!cols.length) {
+      body.innerHTML = '<p class="note">暂无公众号好文集合。</p>';
+      return;
+    }
+    body.innerHTML = `<ul class="lesson-list">${cols
+      .map((col) => {
+        const kind = col.kind === 'link' ? 'link' : 'text';
+        const note = col.note ? `<p class="lesson-list__meta">${esc(col.note)}</p>` : '';
+        if (kind === 'link') {
+          const url = safeUrl(col.url);
+          return `
+            <li>
+              <a href="${url || '#'}" ${url ? 'target="_blank" rel="noopener"' : ''}>
+                <span class="lesson-list__num">链接</span>
+                <div>
+                  <h2 class="lesson-list__title">${esc(col.title)}</h2>
+                  ${note}
+                  <p class="lesson-list__summary">${url ? '点击打开外链' : '尚未填写链接'}</p>
+                </div>
+              </a>
+            </li>`;
+        }
+        const count = (col.articles || []).filter((a) => a && a.title).length;
+        return `
+          <li>
+            <a href="#acol-${esc(col.id)}">
+              <span class="lesson-list__num">集合</span>
+              <div>
+                <h2 class="lesson-list__title">${esc(col.title)}</h2>
+                ${note}
+                <p class="lesson-list__summary">${count ? `共 ${count} 篇` : '进入查看文章'}</p>
+              </div>
+            </a>
+          </li>`;
+      })
+      .join('')}</ul>`;
+  }
+
+  function renderDetail(cols, colId) {
+    const col = cols.find((c) => c.id === colId);
+    if (!col || col.kind === 'link') {
+      history.replaceState(null, '', location.pathname + location.search);
+      renderCollections(cols);
+      return;
+    }
+    titleEl.textContent = col.title || '集合';
+    if (col.note) {
+      leadEl.textContent = col.note;
+      leadEl.hidden = false;
+    } else {
+      leadEl.hidden = true;
+    }
+    backEl.href = '/reference/articles/';
+    backEl.textContent = '← 返回公众号好文';
+
+    const arts = Array.isArray(col.articles) ? col.articles : [];
+    if (!arts.length) {
+      body.innerHTML = '<p class="note">该集合暂无文章。</p>';
+      return;
+    }
+    body.innerHTML = `<ul class="lesson-list">${arts
+      .map((art) => {
+        const url = safeUrl(art.url);
+        return `
+          <li>
+            <a href="${url || '#'}" ${url ? 'target="_blank" rel="noopener"' : ''}>
+              <span class="lesson-list__num">好文</span>
+              <div>
+                <h2 class="lesson-list__title">${esc(art.title)}</h2>
+                ${art.note ? `<p class="lesson-list__meta">${esc(art.note)}</p>` : ''}
+                <p class="lesson-list__summary">${url ? '点击阅读原文' : '尚未填写链接'}</p>
+              </div>
+            </a>
+          </li>`;
+      })
+      .join('')}</ul>`;
+  }
+
+  let cols = [];
+  function route() {
+    const hash = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+    if (hash.startsWith('acol-')) {
+      renderDetail(cols, hash.slice(5));
+      return;
+    }
+    renderCollections(cols);
+  }
+
+  try {
+    cols = await fetchArticles();
+    route();
+    window.addEventListener('hashchange', () => route());
+  } catch (e) {
+    body.innerHTML = `<p>加载失败：${esc(e.message || e)}</p>`;
+  }
+});
+</script>

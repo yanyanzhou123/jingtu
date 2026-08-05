@@ -1,0 +1,468 @@
+:root {
+  --yt-ink: var(--ink, #2a2214);
+  --yt-soft: var(--ink-soft, #5c4e36);
+  --yt-line: var(--line, rgba(42, 34, 20, 0.12));
+  --yt-panel: color-mix(in srgb, var(--paper, #faf6e8) 88%, #f0e6c8);
+  --yt-accent: #c9a227;
+}
+
+.yt-page {
+  padding-bottom: 4rem;
+}
+
+.yt-hero h1 {
+  font-family: var(--font-serif, 'Noto Serif SC', serif);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.yt-hero > p {
+  color: var(--yt-soft);
+  max-width: 42rem;
+}
+
+.yt-notice {
+  margin: 1rem 0 0;
+  max-width: 42rem;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid color-mix(in srgb, #8a6a2f 35%, var(--yt-line));
+  border-left: 3px solid #8a6a2f;
+  background: color-mix(in srgb, #f3ead2 55%, var(--yt-panel));
+  color: var(--yt-soft);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.yt-notice strong {
+  display: inline;
+  margin-right: 0.35rem;
+  color: #6b5324;
+  font-weight: 600;
+}
+
+.yt-cards {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+@media (min-width: 720px) {
+  .yt-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.yt-card {
+  display: block;
+  padding: 1.35rem 1.4rem 1.5rem;
+  border: 1px solid var(--yt-line);
+  background:
+    linear-gradient(165deg, color-mix(in srgb, #fff 55%, transparent), transparent 55%),
+    var(--yt-panel);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.yt-card:hover {
+  border-color: var(--yt-accent);
+  transform: translateY(-2px);
+}
+
+.yt-card h2 {
+  margin: 0.35rem 0 0.5rem;
+  font-family: var(--font-serif, 'Noto Serif SC', serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.yt-card p {
+  margin: 0;
+  color: var(--yt-soft);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.yt-card .yt-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--yt-accent);
+  font-family: var(--font-sans, sans-serif);
+}
+
+.yt-back {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--yt-soft);
+  text-decoration: none;
+}
+
+.yt-back:hover {
+  color: var(--yt-ink);
+}
+
+.yt-setup,
+.yt-chat-wrap {
+  margin-top: 1rem;
+  border-top: 1px solid var(--yt-line);
+  padding-top: 1.25rem;
+  width: 100%;
+}
+
+.yt-label {
+  display: block;
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.85rem;
+  color: var(--yt-soft);
+  font-family: var(--font-sans, sans-serif);
+}
+
+.yt-select,
+.yt-input,
+.yt-textarea {
+  width: 100%;
+  max-width: 40rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--yt-line);
+  background: color-mix(in srgb, #fff 70%, var(--yt-panel));
+  color: var(--yt-ink);
+  font: inherit;
+}
+
+.yt-textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.yt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.85rem;
+}
+
+.yt-btn {
+  appearance: none;
+  border: 1px solid var(--yt-accent);
+  background: var(--yt-accent);
+  color: #fbf6e6;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.yt-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.yt-btn--ghost {
+  background: transparent;
+  color: var(--yt-ink);
+  border-color: var(--yt-line);
+}
+
+.yt-msg {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--yt-soft);
+  font-family: var(--font-sans, sans-serif);
+}
+
+.yt-msg--err {
+  color: #8b2e2e;
+}
+
+.yt-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: none;
+  margin: 1rem 0 1.25rem;
+  min-height: 8rem;
+}
+
+.yt-bubble {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--yt-line);
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-serif, 'Songti SC', 'Noto Serif SC', serif);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--yt-ink);
+}
+
+.yt-bubble--assistant {
+  background: color-mix(in srgb, #fff 62%, var(--yt-panel));
+  border-left: 3px solid var(--yt-accent);
+}
+
+.yt-bubble--user {
+  background: color-mix(in srgb, #fff 82%, var(--yt-panel));
+  margin-left: clamp(0rem, 8vw, 4rem);
+}
+
+.yt-bubble-meta {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--yt-soft);
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 500;
+}
+
+.yt-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: none;
+  margin-top: 0.25rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--yt-line);
+  background: transparent;
+  position: static;
+}
+
+.yt-composer .yt-textarea {
+  max-width: none;
+}
+
+.yt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.yt-chip {
+  appearance: none;
+  border: 1px solid var(--yt-line);
+  background: color-mix(in srgb, #fff 70%, var(--yt-panel));
+  color: var(--yt-ink);
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.yt-chip:hover {
+  border-color: var(--yt-accent);
+}
+
+.yt-hidden {
+  display: none !important;
+}
+
+.yt-loading {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  max-width: 40rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--yt-line);
+  background: color-mix(in srgb, #fff 55%, var(--yt-panel));
+}
+
+.yt-loading[hidden] {
+  display: none !important;
+}
+
+.yt-loading-copy {
+  min-width: 0;
+}
+
+.yt-loading-copy strong {
+  display: block;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--yt-ink);
+}
+
+.yt-loading-copy p {
+  margin: 0.2rem 0 0;
+  font-size: 0.88rem;
+  color: var(--yt-soft);
+  font-family: var(--font-sans, sans-serif);
+  max-width: none;
+}
+
+.yt-spinner {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  border: 2px solid color-mix(in srgb, var(--yt-accent) 25%, transparent);
+  border-top-color: var(--yt-accent);
+  border-radius: 50%;
+  animation: yt-spin 0.7s linear infinite;
+}
+
+@keyframes yt-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.yt-skeleton {
+  max-width: 40rem;
+}
+
+.yt-skeleton[hidden] {
+  display: none !important;
+}
+
+.yt-skel-label,
+.yt-skel-bar,
+.yt-skel-btn {
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--yt-line) 55%, transparent) 0%,
+    color-mix(in srgb, #fff 70%, var(--yt-panel)) 45%,
+    color-mix(in srgb, var(--yt-line) 55%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: yt-shimmer 1.2s ease-in-out infinite;
+}
+
+.yt-skel-label {
+  width: 5.5rem;
+  height: 0.7rem;
+  margin: 0.85rem 0 0.45rem;
+}
+
+.yt-skel-label:first-child {
+  margin-top: 0;
+}
+
+.yt-skel-bar {
+  width: 100%;
+  height: 2.4rem;
+}
+
+.yt-skel-btn {
+  width: 6.5rem;
+  height: 2.2rem;
+  margin-top: 1rem;
+}
+
+@keyframes yt-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.yt-setup.is-loading .yt-fields {
+  display: none !important;
+}
+
+.yt-select:disabled,
+.yt-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* 进入对话后收紧页头，把宽度留给气泡 */
+.yt-page.is-chatting .yt-hero > h1 {
+  font-size: 1.45rem;
+  margin-bottom: 0.35rem;
+}
+
+.yt-page.is-chatting .yt-hero > p:not(.yt-msg):not(.group-label) {
+  display: none;
+}
+
+.yt-page.is-chatting .yt-notice {
+  max-width: none;
+  margin-top: 0.65rem;
+  font-size: 0.85rem;
+}
+
+@media (min-width: 900px) {
+  .yt-page.is-chatting .yt-bubble {
+    max-width: 58rem;
+  }
+
+  .yt-page.is-chatting .yt-bubble--user {
+    margin-left: 3rem;
+  }
+}
+
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
+  .yt-page {
+    padding-bottom: calc(3rem + env(safe-area-inset-bottom));
+  }
+
+  .yt-cards {
+    gap: 0.85rem;
+    margin-top: 1.25rem;
+  }
+
+  .yt-card {
+    padding: 1.15rem 1.05rem 1.25rem;
+    border-radius: 0.55rem;
+  }
+
+  .yt-card:hover {
+    transform: none;
+  }
+
+  .yt-card h2 {
+    font-size: 1.22rem;
+  }
+
+  .yt-btn,
+  .yt-btn--ghost {
+    min-height: 2.85rem;
+    padding: 0.65rem 1.1rem;
+  }
+
+  .yt-chip {
+    min-height: 2.45rem;
+    padding: 0.45rem 0.85rem;
+  }
+
+  .yt-select,
+  .yt-input,
+  .yt-textarea {
+    max-width: none;
+    font-size: 1rem;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .yt-bubble {
+    font-size: 1rem;
+    line-height: 1.7;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .yt-bubble--user {
+    margin-left: 0.75rem;
+  }
+
+  .yt-composer {
+    padding-top: 0.85rem;
+  }
+
+  .yt-actions {
+    gap: 0.5rem;
+  }
+
+  .yt-actions .yt-btn {
+    flex: 1 1 auto;
+  }
+}

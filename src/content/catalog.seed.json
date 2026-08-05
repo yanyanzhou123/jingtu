@@ -1,0 +1,65 @@
+{
+  "version": 4,
+  "references": [],
+  "modules": [
+    {
+      "id": "nianfo",
+      "slug": "nianfo",
+      "title": "念佛修法",
+      "shortTitle": "念佛修法",
+      "summary": "念佛方法与日用修持指引。",
+      "status": "open",
+      "statusLabel": "开放中",
+      "intro": "本模块课次可在运营页配置：章节 → 课。",
+      "section": "净土学修",
+      "sectionGroup": "",
+      "references": [],
+      "chapters": [
+        {
+          "id": "ch-guide",
+          "title": "开篇",
+          "lessons": [
+            {
+              "id": "les-guide",
+              "slug": "xuexiu-yindao",
+              "title": "学修引导",
+              "summary": "模块说明与学修建议。",
+              "text": "欢迎在慧灯净土《念佛修法》中学修。\n\n本模块结构：章节 → 课。每课可配置文字、音频、视频。\n\n请在运营页继续完善内容。",
+              "audioPath": "",
+              "videoPath": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jingdian",
+      "slug": "jingdian",
+      "title": "净土经典",
+      "shortTitle": "净土经典",
+      "summary": "净土相关经论与讲解（陆续开放）。",
+      "status": "coming",
+      "statusLabel": "即将开放",
+      "intro": "本模块课次可在运营页配置。",
+      "section": "净土学修",
+      "sectionGroup": "",
+      "references": [],
+      "chapters": []
+    },
+    {
+      "id": "xiuxing",
+      "slug": "xiuxing",
+      "title": "净土修行",
+      "shortTitle": "净土修行",
+      "summary": "净土修行次第与实践（陆续开放）。",
+      "status": "coming",
+      "statusLabel": "即将开放",
+      "intro": "本模块课次可在运营页配置。",
+      "section": "净土学修",
+      "sectionGroup": "",
+      "references": [],
+      "chapters": []
+    }
+  ],
+  "articleCollections": []
+}

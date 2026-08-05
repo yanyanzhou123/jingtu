@@ -1,0 +1,10 @@
+name = "jingtu-card-cron"
+main = "src/index.ts"
+compatibility_date = "2026-07-22"
+
+# 每 15 分钟检查一次；是否在空闲时段由站点 /api/cards 判断
+[triggers]
+crons = ["0,15,30,45 * * * *"]
+
+[vars]
+SITE_URL = "https://huidengjingtu.win"

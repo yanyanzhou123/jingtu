@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="堪布考问" description="依选定课原文进行 AI 考问研讨">
+  <article class="page-hero yt-page">
+    <div class="wrap yt-hero">
+      <a class="yt-back" href="/yantao/">← 返回研讨</a>
+      <p class="group-label" style="margin-top: 0;">研讨</p>
+      <h1>堪布考问</h1>
+      <p>选择一门已学之课，依该课原文出题考问。请如实作答，勿依赖课外臆测。</p>
+
+      <div id="yt-exam-setup" class="yt-setup is-loading">
+        <div id="yt-exam-loading" class="yt-loading" role="status" aria-live="polite">
+          <span class="yt-spinner" aria-hidden="true"></span>
+          <div class="yt-loading-copy">
+            <strong>正在加载课表</strong>
+            <p>稍候即可选择模块与课次</p>
+          </div>
+        </div>
+
+        <div id="yt-exam-skeleton" class="yt-skeleton" aria-hidden="true">
+          <div class="yt-skel-label"></div>
+          <div class="yt-skel-bar"></div>
+          <div class="yt-skel-label"></div>
+          <div class="yt-skel-bar"></div>
+          <div class="yt-skel-btn"></div>
+        </div>
+
+        <div id="yt-exam-fields" class="yt-fields yt-hidden">
+          <label class="yt-label" for="yt-mod">学修模块</label>
+          <select id="yt-mod" class="yt-select" disabled></select>
+          <label class="yt-label" for="yt-lesson">课次</label>
+          <select id="yt-lesson" class="yt-select" disabled></select>
+          <div class="yt-actions">
+            <button type="button" id="yt-exam-start" class="yt-btn" disabled>开始考问</button>
+          </div>
+        </div>
+
+        <p id="yt-exam-msg" class="yt-msg" hidden></p>
+      </div>
+
+      <div id="yt-exam-chat-wrap" class="yt-chat-wrap yt-hidden">
+        <p id="yt-exam-meta" class="yt-msg" style="margin-top:0;"></p>
+        <div id="yt-exam-chat" class="yt-chat" aria-live="polite"></div>
+        <div class="yt-composer">
+          <textarea id="yt-exam-input" class="yt-textarea" rows="3" placeholder="请作答…"></textarea>
+          <div class="yt-actions">
+            <button type="button" id="yt-exam-send" class="yt-btn">呈答</button>
+            <button type="button" id="yt-exam-next" class="yt-btn yt-btn--ghost">请下一题</button>
+            <button type="button" id="yt-exam-reset" class="yt-btn yt-btn--ghost">重新选课</button>
+          </div>
+          <p id="yt-exam-status" class="yt-msg" hidden></p>
+        </div>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<link rel="stylesheet" href="/yantao.css?v=20260805y" />
+<script src="/yantao-exam.js?v=20260730e" defer></script>

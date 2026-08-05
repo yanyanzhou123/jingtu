@@ -1,0 +1,36 @@
+﻿---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site';
+---
+
+<BaseLayout>
+  <section class="hero" aria-label="首页主视觉">
+    <div class="hero__bg" aria-hidden="true"></div>
+    <div class="hero__content">
+      <p class="hero__brand">{site.name}</p>
+      <h1 class="hero__title">一心念佛，往生净土</h1>
+      <p class="hero__lead">依教奉行，老实念佛，把净土法门落实在日用中。</p>
+      <a class="btn" href="/xuexiu/">进入学修</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap" id="home-sections">
+      <p class="lesson-list__summary">加载中…</p>
+    </div>
+  </section>
+
+  <script src="/jx-catalog.js?v=20260805a" defer></script>
+  <script is:inline>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const root = document.getElementById('home-sections');
+    try {
+      const catalog = await JX.fetchCatalog();
+      root.innerHTML = JX.renderHomeSections(catalog);
+    } catch (e) {
+      console.error('home sections load failed', e);
+      root.innerHTML = `<p>加载失败：${JX.escape(e.message || e)}</p>`;
+    }
+  });
+  </script>
+</BaseLayout>

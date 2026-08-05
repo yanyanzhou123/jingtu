@@ -1,0 +1,19 @@
+---
+import { site } from '../data/site';
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>© {new Date().getFullYear()} {site.name} · {site.domain}</p>
+    <p>{site.footerNote}</p>
+    {
+      site.icpNo && (
+        <p class="site-footer__beian">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
+            {site.icpNo}
+          </a>
+        </p>
+      )
+    }
+  </div>
+</footer>
