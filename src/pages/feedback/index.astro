@@ -1,0 +1,339 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="问题反馈" description="慧灯净土 · 问题反馈">
+  <div class="page-hero">
+    <div class="wrap">
+      <h1>问题反馈</h1>
+      <p>请先选择反馈类型，再填写内容。我们会对邮箱严格保密。</p>
+    </div>
+  </div>
+
+  <section class="section" style="padding-top: 0;">
+    <div class="wrap content-width">
+      <!-- 第一步：选类型 -->
+      <div id="fb-type-picker" class="fb-cards">
+        <button type="button" class="fb-card" data-type="practice">
+          <span class="fb-card__icon" aria-hidden="true">卍</span>
+          <span class="fb-card__title">修行问题</span>
+          <span class="fb-card__desc">学修、念fo、经教、用功中遇到的疑问</span>
+        </button>
+        <button type="button" class="fb-card" data-type="system">
+          <span class="fb-card__icon" aria-hidden="true">⚙</span>
+          <span class="fb-card__title">系统问题</span>
+          <span class="fb-card__desc">网站访问、音视频播放、登录、上传等故障</span>
+        </button>
+      </div>
+
+      <!-- 第二步：填表单 -->
+      <form id="fb-form" class="fb-form" hidden>
+        <p class="fb-form__head">
+          已选：<strong id="fb-type-label">—</strong>
+          <button type="button" id="fb-change-type" class="fb-link">重新选择</button>
+        </p>
+
+        <label class="fb-field">
+          <span class="fb-field__label">内容</span>
+          <textarea
+            id="fb-content"
+            class="fb-field__input fb-field__input--area"
+            maxlength="1000"
+            placeholder="请尽量写清情境与问题，便于我们回复。"
+            required></textarea>
+          <span class="fb-field__meta">
+            <span id="fb-content-count">0</span> / 1000
+          </span>
+        </label>
+
+        <label class="fb-field">
+          <span class="fb-field__label">联系邮箱</span>
+          <input
+            id="fb-email"
+            type="email"
+            class="fb-field__input"
+            maxlength="120"
+            placeholder="example@mail.com"
+            required
+          />
+        </label>
+
+        <p id="fb-msg" class="fb-msg" hidden></p>
+
+        <button type="submit" id="fb-submit" class="btn btn--solid" style="color:#fbf6e6;">
+          提交反馈
+        </button>
+      </form>
+
+      <!-- 成功态 -->
+      <div id="fb-done" class="fb-done" hidden>
+        <p class="fb-done__icon" aria-hidden="true">✓</p>
+        <p class="fb-done__title">反馈已提交</p>
+        <p class="fb-done__desc">我们会尽快查看，必要时通过邮箱回复。</p>
+        <button type="button" id="fb-again" class="btn">再提交一条</button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .fb-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  @media (max-width: 640px) {
+    .fb-cards { grid-template-columns: 1fr; }
+  }
+  .fb-card {
+    appearance: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 1.5rem 1.2rem;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    font: inherit;
+    color: var(--ink);
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  }
+  .fb-card:hover {
+    border-color: var(--jade);
+    background: rgba(201, 162, 39, 0.08);
+  }
+  .fb-card__icon {
+    font-size: 1.8rem;
+    color: var(--jade);
+    line-height: 1;
+  }
+  .fb-card__title {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .fb-card__desc {
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.55;
+  }
+
+  .fb-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    padding: 1.3rem;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.6);
+  }
+  .fb-form__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+  }
+  .fb-form__head strong { color: var(--jade-deep); }
+  .fb-link {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    color: var(--jade-deep);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+  }
+  .fb-link:hover { color: var(--jade); }
+
+  .fb-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .fb-field__label {
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .fb-field__input {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    color: var(--ink);
+  }
+  .fb-field__input:focus {
+    outline: 2px solid var(--jade);
+    outline-offset: -1px;
+    border-color: var(--jade);
+  }
+  .fb-field__input--area {
+    min-height: 9rem;
+    resize: vertical;
+    line-height: 1.7;
+  }
+  .fb-field__meta {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  .fb-msg {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+  }
+  .fb-msg.is-ok { color: var(--jade-deep); }
+  .fb-msg.is-error { color: #8a2f2f; }
+
+  .fb-done {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 2rem 0;
+    padding: 2rem 1.5rem;
+    border: 1px solid var(--jade);
+    background: rgba(201, 162, 39, 0.08);
+    text-align: center;
+  }
+  .fb-done__icon {
+    font-size: 2.2rem;
+    color: var(--jade-deep);
+    margin: 0;
+    line-height: 1;
+  }
+  .fb-done__title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .fb-done__desc {
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const TYPE_LABELS = { practice: '修行问题', system: '系统问题' };
+
+    const picker = document.getElementById('fb-type-picker');
+    const form = document.getElementById('fb-form');
+    const doneBox = document.getElementById('fb-done');
+    const typeLabel = document.getElementById('fb-type-label');
+    const content = document.getElementById('fb-content');
+    const contentCount = document.getElementById('fb-content-count');
+    const email = document.getElementById('fb-email');
+    const msg = document.getElementById('fb-msg');
+    const submitBtn = document.getElementById('fb-submit');
+
+    let currentType = '';
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = `fb-msg is-${kind}`;
+      msg.hidden = !text;
+    }
+
+    function pickType(type) {
+      currentType = type;
+      typeLabel.textContent = TYPE_LABELS[type] || '—';
+      picker.hidden = true;
+      doneBox.hidden = true;
+      form.hidden = false;
+      showMsg('');
+      content.value = '';
+      email.value = '';
+      contentCount.textContent = '0';
+      content.focus();
+    }
+
+    picker.querySelectorAll('.fb-card').forEach((card) => {
+      card.addEventListener('click', () => pickType(card.dataset.type));
+    });
+
+    document.getElementById('fb-change-type').addEventListener('click', () => {
+      form.hidden = true;
+      picker.hidden = false;
+      currentType = '';
+    });
+
+    document.getElementById('fb-again').addEventListener('click', () => {
+      doneBox.hidden = true;
+      picker.hidden = false;
+      form.hidden = true;
+      currentType = '';
+    });
+
+    content.addEventListener('input', () => {
+      contentCount.textContent = String(content.value.length);
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showMsg('');
+
+      if (!currentType) {
+        showMsg('请先选择反馈类型', 'error');
+        return;
+      }
+      const c = content.value.trim();
+      if (!c) {
+        showMsg('请填写反馈内容', 'error');
+        content.focus();
+        return;
+      }
+      if (c.length > 1000) {
+        showMsg('内容请控制在 1000 字以内', 'error');
+        return;
+      }
+      const em = email.value.trim();
+      if (!em) {
+        showMsg('请填写联系邮箱', 'error');
+        email.focus();
+        return;
+      }
+      if (!/^[^\s@<>]{1,64}@[^\s@<>]{1,253}\.[^\s@<>]{2,}$/.test(em)) {
+        showMsg('邮箱格式不正确', 'error');
+        email.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '提交中…';
+
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: currentType, content: c, email: em }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+          throw new Error(data.error || `提交失败（${res.status}）`);
+        }
+        form.hidden = true;
+        doneBox.hidden = false;
+      } catch (err) {
+        showMsg(String(err.message || err), 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '提交反馈';
+      }
+    });
+  })();
+</script>
