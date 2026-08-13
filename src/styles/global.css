@@ -1268,6 +1268,11 @@ img {
   background: rgba(120, 40, 30, 0.88);
 }
 
+.learn-video-status[data-mode='resume'] {
+  background: rgba(143, 115, 24, 0.9);
+  color: #fbf6e6;
+}
+
 .learn-audio {
   margin: 0.5rem 0 0;
 }

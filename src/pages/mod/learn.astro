@@ -1,4 +1,4 @@
-﻿---
+---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
@@ -318,14 +318,200 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               panel.querySelector('#font-smaller')?.addEventListener('click', () => changeFontSize(-1));
               panel.querySelector('#font-larger')?.addEventListener('click', () => changeFontSize(1));
               bindTextToc(panel);
+              // 听读模式下的音频条也支持断点续看
+              const audio = panel.querySelector('audio');
+              if (audio && lesson.audioPath) bindResume(audio, String(lesson.audioPath).trim());
             }
-            if (key === 'video') bindVideoStatus(panel);
+            if (key === 'video') {
+              bindVideoStatus(panel);
+              const video = panel.querySelector('video');
+              if (video && lesson.videoPath) bindResume(video, String(lesson.videoPath).trim());
+            }
+            if (key === 'audio') {
+              const audio = panel.querySelector('audio');
+              if (audio && lesson.audioPath) bindResume(audio, String(lesson.audioPath).trim());
+            }
           }
           panel.hidden = key !== current;
         });
 
         pauseHiddenMedia(current);
         if (current === 'text') applyFontSize();
+      }
+
+      // ====== 断点续看（localStorage） ======
+      const MEDIA_RESUME_PREFIX = 'jx-media-resume:';
+      const RESUME_SAVE_INTERVAL_MS = 5000;
+      const RESUME_NEAR_END_RATIO = 0.95;
+      const RESUME_STORE_LIMIT = 200;
+      const RESUME_MIN_POS_SEC = 5;
+
+      function mediaResumeKey(mediaPath) {
+        return MEDIA_RESUME_PREFIX + String(mediaPath || '').replace(/^\/+/, '');
+      }
+
+      function mediaResumeLoad(mediaPath) {
+        try {
+          const raw = localStorage.getItem(mediaResumeKey(mediaPath));
+          if (!raw) return null;
+          const data = JSON.parse(raw);
+          if (!data || typeof data.p !== 'number' || data.p <= 0) return null;
+          return { position_sec: data.p, updatedAt: Number(data.t) || 0, duration: Number(data.d) || 0 };
+        } catch {
+          return null;
+        }
+      }
+
+      function mediaResumeSave(mediaPath, position_sec, duration) {
+        if (!mediaPath) return;
+        try {
+          const key = mediaResumeKey(mediaPath);
+          const payload = { p: position_sec, d: duration || 0, t: Date.now() };
+          localStorage.setItem(key, JSON.stringify(payload));
+          // 懒清理超量：保存时顺便检查总数，超上限删最旧
+          setTimeout(() => mediaResumePruneIfNeeded(), 0);
+        } catch (e) {
+          // localStorage 可能超限，静默失败
+          try { mediaResumePruneIfNeeded(); } catch {}
+        }
+      }
+
+      function mediaResumePruneIfNeeded() {
+        try {
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(MEDIA_RESUME_PREFIX)) {
+              let t = 0;
+              try { t = JSON.parse(localStorage.getItem(k) || '{}').t || 0; } catch {}
+              keys.push({ k, t });
+            }
+          }
+          if (keys.length <= RESUME_STORE_LIMIT) return;
+          keys.sort((a, b) => a.t - b.t);
+          for (let i = 0; i < keys.length - RESUME_STORE_LIMIT; i++) {
+            try { localStorage.removeItem(keys[i].k); } catch {}
+          }
+        } catch {}
+      }
+
+      function fmtResumeSec(sec) {
+        sec = Math.max(0, Math.floor(Number(sec) || 0));
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        const pad = (n) => String(n).padStart(2, '0');
+        return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+      }
+
+      function bindResume(mediaEl, mediaPath) {
+        if (!mediaEl || !mediaPath) return;
+        const isVideo = mediaEl.tagName.toLowerCase() === 'video';
+
+        let saveTimer = null;
+        let restored = false;
+        let savedOnce = false;
+
+        const scheduleSave = () => {
+          if (saveTimer) return;
+          saveTimer = setTimeout(() => {
+            saveTimer = null;
+            try {
+              const dur = mediaEl.duration;
+              const pos = mediaEl.currentTime;
+              if (!Number.isFinite(dur) || !Number.isFinite(pos)) return;
+              // 已播到片尾附近：不留断点，让下次从头看
+              if (dur > RESUME_MIN_POS_SEC && pos / dur >= RESUME_NEAR_END_RATIO) {
+                try { localStorage.removeItem(mediaResumeKey(mediaPath)); } catch {}
+                return;
+              }
+              if (pos < RESUME_MIN_POS_SEC && !savedOnce) return;
+              mediaResumeSave(mediaPath, pos, dur);
+              savedOnce = true;
+            } catch {}
+          }, RESUME_SAVE_INTERVAL_MS);
+        };
+
+        const clearSaveTimer = () => {
+          if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+        };
+
+        // 恢复：loadedmetadata 后尝试 seek 一次
+        const onLoadedMetadata = () => {
+          if (restored) return;
+          const dur = mediaEl.duration;
+          if (!Number.isFinite(dur) || dur <= 0) return;
+          const saved = mediaResumeLoad(mediaPath);
+          if (!saved) return;
+          let pos = saved.position_sec;
+          if (pos < RESUME_MIN_POS_SEC) return;
+          if (pos >= dur * RESUME_NEAR_END_RATIO) return;
+          try {
+            mediaEl.currentTime = Math.min(dur - 0.2, pos);
+            restored = true;
+            // 小提示（只对 video，因为 audio 原生 UI 已展示 time）
+            if (isVideo) {
+              const status = mediaEl.parentElement?.querySelector('.learn-video-status');
+              if (status) {
+                status.hidden = false;
+                status.textContent = `已从上次位置继续播放（${fmtResumeSec(pos)}）`;
+                status.dataset.mode = 'resume';
+                setTimeout(() => { status.hidden = true; }, 3200);
+              }
+            }
+          } catch {}
+        };
+
+        const onTimeupdate = () => {
+          try {
+            const dur = mediaEl.duration;
+            const pos = mediaEl.currentTime;
+            if (!Number.isFinite(dur) || !Number.isFinite(pos) || pos < RESUME_MIN_POS_SEC) {
+              // 还没到最小保存阈值，先不调度
+              return;
+            }
+            scheduleSave();
+          } catch {}
+        };
+
+        const onPause = () => {
+          // 暂停时立即写一次，避免离开丢失最后几秒
+          try {
+            const dur = mediaEl.duration;
+            const pos = mediaEl.currentTime;
+            if (Number.isFinite(dur) && Number.isFinite(pos) && pos >= RESUME_MIN_POS_SEC) {
+              if (!(dur > RESUME_MIN_POS_SEC && pos / dur >= RESUME_NEAR_END_RATIO)) {
+                mediaResumeSave(mediaPath, pos, dur);
+                savedOnce = true;
+              }
+            }
+          } catch {}
+        };
+
+        const onEnded = () => {
+          // 播完清除，下次从头
+          try { localStorage.removeItem(mediaResumeKey(mediaPath)); } catch {}
+        };
+
+        const onUnload = () => {
+          clearSaveTimer();
+          try {
+            const dur = mediaEl.duration;
+            const pos = mediaEl.currentTime;
+            if (Number.isFinite(dur) && Number.isFinite(pos) && pos >= RESUME_MIN_POS_SEC) {
+              if (!(dur > RESUME_MIN_POS_SEC && pos / dur >= RESUME_NEAR_END_RATIO)) {
+                mediaResumeSave(mediaPath, pos, dur);
+              }
+            }
+          } catch {}
+        };
+
+        mediaEl.addEventListener('loadedmetadata', onLoadedMetadata);
+        mediaEl.addEventListener('timeupdate', onTimeupdate);
+        mediaEl.addEventListener('pause', onPause);
+        mediaEl.addEventListener('ended', onEnded);
+        window.addEventListener('beforeunload', onUnload);
+        window.addEventListener('pagehide', onUnload);
       }
 
       function bindVideoStatus(panel) {

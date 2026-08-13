@@ -19,17 +19,21 @@ const { items } = Astro.props;
           <div class="video-box">
             <p class="audio-box__label">视频 · {item.title}</p>
             {src ? (
-              <video
-                controls
-                playsinline
-                webkit-playsinline
-                x5-playsinline
-                x5-video-player-type="h5"
-                preload="metadata"
-                src={src}
-              >
-                您的浏览器不支持视频播放。
-              </video>
+              <div class="video-box__wrap">
+                <video
+                  controls
+                  playsinline
+                  webkit-playsinline
+                  x5-playsinline
+                  x5-video-player-type="h5"
+                  preload="metadata"
+                  data-media-path={item.path}
+                  src={src}
+                >
+                  您的浏览器不支持视频播放。
+                </video>
+                <p class="video-box__status" data-resume-status-for={item.path} hidden aria-live="polite"></p>
+              </div>
             ) : (
               <p class="audio-box__empty">待上传：{item.path}</p>
             )}
@@ -39,6 +43,117 @@ const { items } = Astro.props;
     </div>
   )
 }
+
+<script is:inline>
+  (() => {
+    const PREFIX = 'jx-media-resume:';
+    const SAVE_MS = 5000;
+    const MIN_POS = 5;
+    const NEAR_END = 0.95;
+    const STORE_LIMIT = 200;
+
+    function k(p) { return PREFIX + String(p || '').replace(/^\/+/, ''); }
+    function load(p) {
+      try { const d = JSON.parse(localStorage.getItem(k(p)) || 'null'); return (d && typeof d.p === 'number') ? d : null; } catch { return null; }
+    }
+    function save(p, pos, dur) {
+      try {
+        localStorage.setItem(k(p), JSON.stringify({ p: pos, d: dur || 0, t: Date.now() }));
+        setTimeout(prune, 0);
+      } catch { try { prune(); } catch {} }
+    }
+    function prune() {
+      try {
+        const arr = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const s = localStorage.key(i);
+          if (!s || !s.startsWith(PREFIX)) continue;
+          let t = 0;
+          try { t = JSON.parse(localStorage.getItem(s) || '{}').t || 0; } catch {}
+          arr.push({ s, t });
+        }
+        if (arr.length <= STORE_LIMIT) return;
+        arr.sort((a, b) => a.t - b.t);
+        for (let i = 0; i < arr.length - STORE_LIMIT; i++) localStorage.removeItem(arr[i].s);
+      } catch {}
+    }
+    function fmt(s) {
+      s = Math.max(0, Math.floor(Number(s) || 0));
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+    }
+
+    document.querySelectorAll('video[data-media-path]').forEach((el) => {
+      const path = el.getAttribute('data-media-path');
+      if (!path) return;
+      const status = document.querySelector(`[data-resume-status-for="${CSS.escape(path)}"]`);
+      let timer = null, restored = false, savedOnce = false;
+
+      const showResume = (pos) => {
+        if (!status) return;
+        status.hidden = false;
+        status.textContent = `已从上次位置继续播放（${fmt(pos)}）`;
+        status.dataset.mode = 'resume';
+        setTimeout(() => { status.hidden = true; status.dataset.mode = ''; }, 3200);
+      };
+
+      const schedule = () => {
+        if (timer) return;
+        timer = setTimeout(() => {
+          timer = null;
+          try {
+            const dur = el.duration, pos = el.currentTime;
+            if (!Number.isFinite(dur) || !Number.isFinite(pos)) return;
+            if (dur > MIN_POS && pos / dur >= NEAR_END) { localStorage.removeItem(k(path)); return; }
+            if (pos < MIN_POS && !savedOnce) return;
+            save(path, pos, dur); savedOnce = true;
+          } catch {}
+        }, SAVE_MS);
+      };
+
+      el.addEventListener('loadedmetadata', () => {
+        if (restored) return;
+        const dur = el.duration;
+        if (!Number.isFinite(dur) || dur <= 0) return;
+        const d = load(path);
+        if (!d || d.p < MIN_POS || d.p >= dur * NEAR_END) return;
+        try {
+          el.currentTime = Math.min(dur - 0.2, d.p);
+          restored = true;
+          showResume(d.p);
+        } catch {}
+      });
+      el.addEventListener('timeupdate', () => {
+        try {
+          const dur = el.duration, pos = el.currentTime;
+          if (!Number.isFinite(dur) || !Number.isFinite(pos) || pos < MIN_POS) return;
+          schedule();
+        } catch {}
+      });
+      el.addEventListener('pause', () => {
+        try {
+          const dur = el.duration, pos = el.currentTime;
+          if (Number.isFinite(dur) && Number.isFinite(pos) && pos >= MIN_POS
+            && !(dur > MIN_POS && pos / dur >= NEAR_END)) {
+            save(path, pos, dur); savedOnce = true;
+          }
+        } catch {}
+      });
+      el.addEventListener('ended', () => { try { localStorage.removeItem(k(path)); } catch {} });
+      const unload = () => {
+        if (timer) { clearTimeout(timer); timer = null; }
+        try {
+          const dur = el.duration, pos = el.currentTime;
+          if (Number.isFinite(dur) && Number.isFinite(pos) && pos >= MIN_POS
+            && !(dur > MIN_POS && pos / dur >= NEAR_END)) save(path, pos, dur);
+        } catch {}
+      };
+      window.addEventListener('beforeunload', unload);
+      window.addEventListener('pagehide', unload);
+    });
+  })();
+</script>
 
 <style>
   .video-box {
@@ -50,5 +165,28 @@ const { items } = Astro.props;
     width: 100%;
     max-height: 28rem;
     background: #111;
+  }
+  .video-box__wrap {
+    position: relative;
+  }
+  .video-box__status {
+    position: absolute;
+    left: 0.75rem;
+    right: 0.75rem;
+    bottom: 3.1rem;
+    z-index: 2;
+    margin: 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.45rem;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    text-align: center;
+    color: #fbf6e6;
+    background: rgba(42, 34, 20, 0.82);
+    pointer-events: none;
+  }
+  .video-box__status[data-mode='resume'] {
+    background: rgba(143, 115, 24, 0.9);
   }
 </style>
