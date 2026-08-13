@@ -17,3 +17,6 @@ binding = "AI"
 [[vectorize]]
 binding = "VECTORIZE"
 index_name = "jingtu-passages"
+
+[vars]
+PUBLIC_R2_BASE = "https://media.huidengjingtu.win"
