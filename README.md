@@ -7,11 +7,36 @@
 |------|------|
 | 域名 | https://huidengjingtu.win （旧：https://jingtu.jianxing.win 可过渡） |
 | Cloudflare Pages | 项目名 `jingtu` |
-| R2 | `jingtu-files` · 公开前缀见 `.env` 的 `PUBLIC_R2_BASE` |
+| R2 | `jingtu-files` · 公开前缀见 `.env` 的 `PUBLIC_R2_BASE`（建议用自定义子域名，不要用 `r2.dev`） |
 | D1 | `jingtu-app` |
 | Vectorize | `jingtu-passages` |
 | 后台 | https://huidengjingtu.win/ops/ |
 | 见行主站 | 独立仓库/目录 `加行网站`，互不同步 |
+
+## R2 绑定自定义域名（启用 CDN 加速）
+
+`r2.dev` 没有 CDN 缓存、每次都回源新加坡、国内访问慢。强烈建议把媒体挂到自己的子域名（如 `media.jianxing.xin`），**自动走 Cloudflare CDN，完全免费**。
+
+### 步骤
+
+1. **Cloudflare 控制台** → R2 → `jingtu-files` 桶 → 设置 → **「自定义域」**
+2. 点「连接域」，填 `media.jianxing.xin`（选 Cloudflare 管理的那个 zone，即 jianxing.xin）
+3. 它会自动创建一条 DNS CNAME 记录（Cloudflare 会自动配，一般不用手动写），确认 DNS 面板里有 `media` → R2 桶域名的 CNAME
+4. 等 DNS 生效（几分钟内），打开 `https://media.jianxing.xin/config/catalog.json`，能拿到 JSON 就成功
+5. **CORS 配置**（必须开，否则自定义播放器/Canvas 访问会被拦）：
+   - R2 → `jingtu-files` 桶 → **「设置」→「跨域资源共享」→「添加 CORS 规则」**
+   - 允许的来源（Origin）：`https://jingtu.jianxing.xin` `https://huidengjingtu.win`（两行）
+   - 允许的方法：`GET` `HEAD`
+   - 允许的头：`Range`
+   - 暴露的头：`Content-Length`、`Content-Range`
+   - Max-Age：86400
+6. 修改 `.env`（和 Pages 项目里的环境变量都要改）：
+   ```
+   PUBLIC_R2_BASE=https://media.jianxing.xin
+   ```
+7. 本地测试没问题后执行 `npm run deploy`，Pages 环境变量也要同步。
+
+以后要换阿里云 OSS/腾讯云 COS，只改 `PUBLIC_R2_BASE` 和 DNS 即可，主站代码不用动。
 
 ## 常用命令
 
