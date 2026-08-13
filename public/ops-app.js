@@ -1408,7 +1408,7 @@
             title,
             summary: '',
             text: '',
-            audioPath: `${mod.slug}/${slug}.mp3`,
+            audioPath: '',
             videoPath: '',
           });
           setDirty(true);
