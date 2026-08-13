@@ -1676,11 +1676,11 @@
           <div class="ops-upload-panel">
             <label class="ops-check">
               <input type="checkbox" id="video-compress" />
-              <span>上传前转 AAC 音轨（浏览器处理，大文件仍可能较慢）</span>
+              <span>上传前转码为 H.264+AAC（推荐，iOS/苹果兼容，浏览器处理较慢）</span>
             </label>
             <label class="ops-check">
               <input type="checkbox" id="video-compress-deep" />
-              <span>同时压画面到 720p（很慢，200MB 可能要几十分钟）</span>
+              <span>同时压画面到 720p（更慢，200MB 可能要几十分钟）</span>
             </label>
             <p class="ops-hint">
               建议：用小程序或电脑软件先转成 <strong>H.264 + AAC</strong> 再上传（更快、苹果微信才有声音）。

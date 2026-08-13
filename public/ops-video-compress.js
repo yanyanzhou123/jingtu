@@ -120,59 +120,35 @@
         ]);
         mode = 'deep';
       } else {
-        // 快路径：不重编画面，只转 AAC（苹果微信出声的关键）
-        onStatus?.('快速处理：保留画面，音轨转为 AAC…');
-        try {
-          await runExec(ff, [
-            '-i',
-            inName,
-            '-c:v',
-            'copy',
-            '-c:a',
-            'aac',
-            '-b:a',
-            '128k',
-            '-ar',
-            '44100',
-            '-ac',
-            '2',
-            '-movflags',
-            '+faststart',
-            '-f',
-            'mp4',
-            outName,
-          ]);
-        } catch {
-          // 少数容器/编码 copy 失败时，再极速重编画面
-          onStatus?.('画面无法直接拷贝，改为极速重编码…');
-          try {
-            await ff.deleteFile(outName);
-          } catch {}
-          await runExec(ff, [
-            '-i',
-            inName,
-            '-c:v',
-            'libx264',
-            '-preset',
-            'ultrafast',
-            '-crf',
-            '26',
-            '-c:a',
-            'aac',
-            '-b:a',
-            '128k',
-            '-ar',
-            '44100',
-            '-ac',
-            '2',
-            '-movflags',
-            '+faststart',
-            '-f',
-            'mp4',
-            outName,
-          ]);
-          mode = 'fallback';
-        }
+        // 快路径：视频强制重编为 H.264（解决 HEVC 在 iOS 无法播放）
+        // 音频转 AAC + faststart（苹果微信出声 + iOS 可播）
+        onStatus?.('正在转码：H.264 + AAC + faststart（iOS 兼容）…');
+        await runExec(ff, [
+          '-i',
+          inName,
+          '-c:v',
+          'libx264',
+          '-preset',
+          'ultrafast',
+          '-crf',
+          '24',
+          '-pix_fmt',
+          'yuv420p',
+          '-c:a',
+          'aac',
+          '-b:a',
+          '128k',
+          '-ar',
+          '44100',
+          '-ac',
+          '2',
+          '-movflags',
+          '+faststart',
+          '-f',
+          'mp4',
+          outName,
+        ]);
+        mode = 'h264';
       }
 
       const data = await ff.readFile(outName);
@@ -185,7 +161,7 @@
 
       onProgress?.(100);
       const label =
-        mode === 'deep' ? '深度压缩完成' : mode === 'fallback' ? '转码完成' : 'AAC 转换完成';
+        mode === 'deep' ? '深度压缩完成' : mode === 'h264' ? 'H.264 转码完成' : '转码完成';
       onStatus?.(
         `${label}：${(file.size / 1024 / 1024).toFixed(1)}MB → ${(outFile.size / 1024 / 1024).toFixed(1)}MB`,
       );
