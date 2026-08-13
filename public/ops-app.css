@@ -694,3 +694,169 @@
   background: var(--jade);
   transition: width 0.15s ease;
 }
+
+/* ============ 视频转码面板 ============ */
+.transcode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.5rem;
+}
+.transcode-tab {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--ink);
+  padding: 0.4rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+.transcode-tab.is-active {
+  background: var(--jade);
+  color: #fff;
+  border-color: var(--jade);
+}
+.transcode-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.transcode-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.transcode-field label {
+  font-weight: 500;
+  font-size: 0.88rem;
+  color: var(--ink);
+}
+.transcode-field input,
+.transcode-field select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+  font: inherit;
+}
+.transcode-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.transcode-hint {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+.transcode-split-points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.transcode-split-point {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+.transcode-split-point input {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+  font: inherit;
+}
+.tc-sp-del {
+  padding: 0.25rem 0.6rem !important;
+}
+.transcode-split-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.transcode-list-actions {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+.tc-auto-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+.transcode-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.transcode-empty {
+  text-align: center;
+  color: #666;
+  padding: 2rem 0;
+  margin: 0;
+}
+.tc-job {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 0.8rem;
+}
+.tc-job-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.tc-job-status {
+  font-weight: 500;
+}
+.tc-job--is-ok .tc-job-status { color: #080; }
+.tc-job--is-error .tc-job-status { color: #c00; }
+.tc-job--is-running .tc-job-status { color: #1866c0; }
+.tc-job-body {
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.tc-job-body p {
+  margin: 0.15rem 0;
+}
+.tc-job-path {
+  color: #444;
+  word-break: break-all;
+}
+.tc-job-mode {
+  color: #666;
+}
+.tc-job-segments {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.tc-segment {
+  display: block;
+  font-size: 0.82rem;
+  color: #555;
+}
+.tc-job-error {
+  color: #c00 !important;
+  font-weight: 500;
+}
+.tc-job-bar {
+  margin-top: 0.6rem;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.tc-job-bar-fill {
+  height: 100%;
+  background: var(--jade);
+  transition: width 0.3s ease;
+}
+.tc-job-progress {
+  font-weight: 500;
+  color: var(--jade);
+}
