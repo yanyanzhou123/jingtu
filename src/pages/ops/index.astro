@@ -32,6 +32,54 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           <button type="button" class="ops-ws-tab" data-ws="articles">公众号好文</button>
         </div>
 
+        <div class="ops-top-panels">
+          <div id="passages-panel" class="ops-cards-panel ops-cards-panel--collapsible">
+            <button type="button" class="ops-cards-toggle" id="btn-passages-toggle" aria-expanded="false">
+              <strong>问答索引（向量）</strong>
+              <span id="passages-summary" class="ops-cards-summary">加载中…</span>
+              <span class="ops-cards-toggle__hint">展开</span>
+            </button>
+            <div class="ops-cards-body" id="passages-body" hidden>
+              <p class="ops-cards-hint">
+                解惑已改用段落向量混合检索。保存课文后会自动增量重建；也可点下方按钮手动预热。
+              </p>
+              <div class="ops-cards-actions">
+                <button type="button" id="btn-passages-warm" class="btn ops-mini" style="color:inherit;border-color:var(--line);">重建/预热一批</button>
+                <button type="button" id="btn-passages-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新状态</button>
+              </div>
+              <p id="passages-msg" class="ops-msg" hidden style="margin:0.5rem 0 0;"></p>
+            </div>
+          </div>
+
+          <div id="feedback-panel" class="ops-cards-panel ops-cards-panel--collapsible">
+            <button type="button" class="ops-cards-toggle" id="btn-feedback-toggle" aria-expanded="false">
+              <strong>问题反馈</strong>
+              <span id="feedback-summary" class="ops-cards-summary">未加载</span>
+              <span class="ops-cards-toggle__hint">展开</span>
+            </button>
+            <div class="ops-cards-body" id="feedback-body" hidden>
+              <div class="fb-ops-filters">
+                <select id="fb-filter-status" aria-label="按状态筛选">
+                  <option value="">全部状态</option>
+                  <option value="new">待处理</option>
+                  <option value="read">已读</option>
+                  <option value="archived">已归档</option>
+                </select>
+                <select id="fb-filter-type" aria-label="按类型筛选">
+                  <option value="">全部类型</option>
+                  <option value="practice">修行问题</option>
+                  <option value="system">系统问题</option>
+                </select>
+                <button type="button" id="btn-fb-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新</button>
+                <span id="fb-ops-count" class="fb-ops-count"></span>
+              </div>
+              <div id="feedback-list" class="fb-ops-list">
+                <p class="fb-ops-empty">点「刷新」加载反馈列表。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="ops-sticky-bar">
           <div id="dirty-banner" class="ops-dirty" hidden>
             有未保存的修改，请点「保存到服务器」。上传成功会自动保存。多人同时编辑时若冲突会提示重新加载；保存前自动备份上一版。
@@ -50,53 +98,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           </div>
         </div>
 
-        <div id="passages-panel" class="ops-cards-panel ops-cards-panel--collapsible">
-          <button type="button" class="ops-cards-toggle" id="btn-passages-toggle" aria-expanded="false">
-            <strong>问答索引（向量）</strong>
-            <span id="passages-summary" class="ops-cards-summary">加载中…</span>
-            <span class="ops-cards-toggle__hint">展开</span>
-          </button>
-          <div class="ops-cards-body" id="passages-body" hidden>
-            <p class="ops-cards-hint">
-              解惑已改用段落向量混合检索。保存课文后会自动增量重建；也可点下方按钮手动预热。
-            </p>
-            <div class="ops-cards-actions">
-              <button type="button" id="btn-passages-warm" class="btn ops-mini" style="color:inherit;border-color:var(--line);">重建/预热一批</button>
-              <button type="button" id="btn-passages-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新状态</button>
-            </div>
-            <p id="passages-msg" class="ops-msg" hidden style="margin:0.5rem 0 0;"></p>
-          </div>
-        </div>
-
-        <div id="feedback-panel" class="ops-cards-panel ops-cards-panel--collapsible">
-          <button type="button" class="ops-cards-toggle" id="btn-feedback-toggle" aria-expanded="false">
-            <strong>问题反馈</strong>
-            <span id="feedback-summary" class="ops-cards-summary">未加载</span>
-            <span class="ops-cards-toggle__hint">展开</span>
-          </button>
-          <div class="ops-cards-body" id="feedback-body" hidden>
-            <div class="fb-ops-filters">
-              <select id="fb-filter-status" aria-label="按状态筛选">
-                <option value="">全部状态</option>
-                <option value="new">待处理</option>
-                <option value="read">已读</option>
-                <option value="archived">已归档</option>
-              </select>
-              <select id="fb-filter-type" aria-label="按类型筛选">
-                <option value="">全部类型</option>
-                <option value="practice">修行问题</option>
-                <option value="system">系统问题</option>
-              </select>
-              <button type="button" id="btn-fb-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新</button>
-              <span id="fb-ops-count" class="fb-ops-count"></span>
-            </div>
-            <div id="feedback-list" class="fb-ops-list">
-              <p class="fb-ops-empty">点「刷新」加载反馈列表。</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="ops-grid" id="ops-grid">
+         <div class="ops-grid" id="ops-grid">
           <aside class="ops-side" id="ops-side">
             <div class="ops-side-head">
               <p class="ops-label" style="margin:0;">学修模块</p>
@@ -122,10 +124,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </section>
 </BaseLayout>
 
-<link rel="stylesheet" href="/ops-app.css?v=20260805y" />
+<link rel="stylesheet" href="/ops-app.css?v=20260814d" />
 <script type="module" src="/ops-video-compress.js?v=20260813b"></script>
-<script src="/ops-app.js?v=20260813b" defer></script>
-<script src="/ops-transcode.js?v=20260813c" defer></script>
+<script src="/ops-app.js?v=20260814c" defer></script>
+<script src="/ops-transcode.js?v=20260814e" defer></script>
 
 <style>
   .fb-ops-filters {

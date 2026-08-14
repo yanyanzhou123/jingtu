@@ -408,6 +408,7 @@
       if (!mod.shortTitle) mod.shortTitle = mod.title || '';
     });
     backfillModuleSections();
+    window.__OPS_CATALOG__ = catalog;
     view = 'structure';
     editPath = null;
     sideMode = 'module';
@@ -1756,6 +1757,11 @@
       const key = les[field] || `${mod.slug}/${les.slug}.${ext}`;
       les[field] = key;
 
+      let transcodeConfig = null;
+      if (kind === 'video') {
+        transcodeConfig = await window.JXTranscode?.askBeforeUpload?.(key, mod, les, file);
+      }
+
       try {
         if (wantCompress) {
           if (typeof window.JXCompressVideo !== 'function') {
@@ -1804,11 +1810,25 @@
         showMsg(saveMsg, '上传完成，正在自动保存目录…', true);
         await saveCatalog({ reason: `上传成功并已自动保存：${key}` });
         renderEditor();
-        setUploadUi(kind, {
-          pct: null,
-          text: `上传完成并已保存：${key}`,
-          ok: true,
-        });
+
+        if (kind === 'video' && transcodeConfig && !transcodeConfig.skip) {
+          setUploadUi(kind, {
+            pct: null,
+            text: `上传完成，已提交服务端转码任务（可离开页面，后台自动处理）`,
+            ok: true,
+          });
+          try {
+            await window.JXTranscode?.submitTask?.(transcodeConfig);
+          } catch (err) {
+            console.error('转码任务提交失败', err);
+          }
+        } else {
+          setUploadUi(kind, {
+            pct: null,
+            text: `上传完成并已保存：${key}`,
+            ok: true,
+          });
+        }
       } catch (e) {
         const msg = String(e.message || e);
         setUploadUi(kind, {

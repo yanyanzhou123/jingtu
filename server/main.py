@@ -64,6 +64,10 @@ class TranscodeResponse(BaseModel):
 
 def time_to_seconds(t: str) -> float:
     t = t.strip()
+    # 清除所有空格和中文标点
+    t = t.replace(" ", "").replace("　", "")
+    # 统一中文冒号
+    t = t.replace("：", ":")
     if ":" in t:
         parts = t.split(":")
         if len(parts) == 3:
@@ -144,18 +148,44 @@ def run_ffmpeg(args: list, progress_callback=None):
         raise RuntimeError(f"ffmpeg 失败: {' '.join(args)}")
 
 
+def get_video_codec(file_path: Path) -> dict:
+    """检测视频编码信息"""
+    info = run_ffprobe(file_path)
+    video_stream = next((s for s in info.get("streams", []) if s.get("codec_type") == "video"), None)
+    audio_stream = next((s for s in info.get("streams", []) if s.get("codec_type") == "audio"), None)
+    return {
+        "video_codec": video_stream.get("codec_name", "unknown") if video_stream else "unknown",
+        "audio_codec": audio_stream.get("codec_name", "unknown") if audio_stream else "unknown",
+        "is_h264": video_stream and video_stream.get("codec_name") in ("h264", "avc1"),
+        "is_aac": audio_stream and audio_stream.get("codec_name") == "aac",
+    }
+
+
 def transcode_to_h264_aac(input_path: Path, output_path: Path, progress_callback=None):
     """转码为 H.264 + AAC + faststart（iOS 兼容）"""
+    codec = get_video_codec(input_path)
+    
+    # 如果已经是 H.264 + AAC，只加 faststart（极快）
+    if codec["is_h264"] and codec["is_aac"]:
+        logger.info("已经是 H.264+AAC，只需添加 faststart")
+        run_ffmpeg([
+            "-i", str(input_path),
+            "-c", "copy",
+            "-movflags", "+faststart",
+            "-f", "mp4",
+            str(output_path)
+        ], progress_callback=progress_callback)
+        return
+    
+    # 只转视频流，音频直接复制（加速）
+    logger.info(f"视频编码: {codec['video_codec']}，需要转码")
     run_ffmpeg([
         "-i", str(input_path),
         "-c:v", "libx264",
-        "-preset", "medium",
+        "-preset", "veryfast",
         "-crf", "23",
         "-pix_fmt", "yuv420p",
-        "-c:a", "aac",
-        "-b:a", "128k",
-        "-ar", "44100",
-        "-ac", "2",
+        "-c:a", "copy",  # 音频直接复制
         "-movflags", "+faststart",
         "-f", "mp4",
         str(output_path)
@@ -166,13 +196,47 @@ def split_video_by_timepoints(
     input_path: Path,
     output_dir: Path,
     split_points: list[float],
-    progress_callback=None
+    progress_callback=None,
+    reencode: bool = True
 ) -> list[Path]:
-    """按时间点拆分视频"""
+    """按时间点拆分视频
+    
+    Args:
+        reencode: True=重新编码（确保兼容），False=无损快速拆分
+    """
     duration = get_duration(input_path)
     boundaries = [0.0] + split_points + [duration]
     segments = []
+    codec = get_video_codec(input_path)
+    
+    # 如果已经是 H.264，且不需要重编码，用无损拆分（极快）
+    if not reencode and codec["is_h264"]:
+        logger.info("无损快速拆分模式（不重新编码）")
+        for i in range(len(boundaries) - 1):
+            start = boundaries[i]
+            end = boundaries[i + 1]
+            seg_duration = end - start
+            if seg_duration < 5:
+                logger.warning(f"跳过过短片段 {i+1}: {seg_duration:.1f}s")
+                continue
 
+            output_path = output_dir / f"segment_{i+1:02d}.mp4"
+            logger.info(f"片段 {i+1}: {seconds_to_time(start)} - {seconds_to_time(end)} ({seg_duration:.1f}s)")
+
+            run_ffmpeg([
+                "-ss", str(start),
+                "-i", str(input_path),
+                "-t", str(seg_duration),
+                "-c", "copy",  # 无损复制
+                "-movflags", "+faststart",
+                "-f", "mp4",
+                str(output_path)
+            ], progress_callback=progress_callback)
+
+            segments.append(output_path)
+        return segments
+    
+    # 重新编码模式
     for i in range(len(boundaries) - 1):
         start = boundaries[i]
         end = boundaries[i + 1]
@@ -189,7 +253,7 @@ def split_video_by_timepoints(
             "-i", str(input_path),
             "-t", str(seg_duration),
             "-c:v", "libx264",
-            "-preset", "medium",
+            "-preset", "veryfast",
             "-crf", "23",
             "-pix_fmt", "yuv420p",
             "-c:a", "aac",
@@ -286,18 +350,34 @@ def process_job(job_id: str, req: TranscodeRequest):
         job["progress"] = 10
         duration = get_duration(source_path)
         job["duration"] = duration
+        
+        # 检测视频格式，决定处理策略
+        codec = get_video_codec(source_path)
+        logger.info(f"视频格式: {codec}")
+        
+        # 如果已经是 H.264+AAC，且不需要强制转码，用无损模式
+        is_already_compatible = codec["is_h264"] and codec["is_aac"]
+        # H.265 也可能在苹果上能播放，只加 faststart 试试
+        can_faststart_only = is_already_compatible or codec["video_codec"] in ("hevc", "h265")
 
         if req.mode in ("split", "transcode_split") and req.split_points:
             split_times = [time_to_seconds(sp.time) for sp in req.split_points]
             split_times = sorted(set(split_times))
             split_times = [t for t in split_times if 0 < t < duration]
 
-            if req.mode == "transcode_split":
+            # 决定是否需要重新编码
+            # split 模式：优先无损拆分（极快）
+            # transcode_split 模式：如果已经兼容，用无损；否则重编码
+            if req.mode == "split" or can_faststart_only:
+                logger.info("使用无损快速拆分模式")
                 segments = split_video_by_timepoints(source_path, work_dir, split_times,
-                    progress_callback=lambda p: update_job(job_id, "transcoding", 10 + p * 60))
+                    progress_callback=lambda p: update_job(job_id, "splitting", 10 + p * 60),
+                    reencode=False)
             else:
+                logger.info("使用转码+拆分模式")
                 segments = split_video_by_timepoints(source_path, work_dir, split_times,
-                    progress_callback=lambda p: update_job(job_id, "splitting", 10 + p * 60))
+                    progress_callback=lambda p: update_job(job_id, "transcoding", 10 + p * 60),
+                    reencode=True)
 
             job["segments"] = []
             for i, seg_path in enumerate(segments):
@@ -315,8 +395,20 @@ def process_job(job_id: str, req: TranscodeRequest):
 
         else:
             output_path = work_dir / "output.mp4"
-            transcode_to_h264_aac(source_path, output_path,
-                progress_callback=lambda p: update_job(job_id, "transcoding", 10 + p * 60))
+            
+            # 如果已经兼容，只加 faststart（几秒钟）
+            if can_faststart_only:
+                logger.info("视频已兼容，只添加 faststart")
+                run_ffmpeg([
+                    "-i", str(source_path),
+                    "-c", "copy",
+                    "-movflags", "+faststart",
+                    "-f", "mp4",
+                    str(output_path)
+                ], progress_callback=lambda p: update_job(job_id, "processing", 10 + p * 60))
+            else:
+                transcode_to_h264_aac(source_path, output_path,
+                    progress_callback=lambda p: update_job(job_id, "transcoding", 10 + p * 60))
 
             filename = f"{req.output_path}.mp4"
             asyncio.run(upload_to_r2(output_path, filename,
