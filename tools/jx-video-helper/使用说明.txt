@@ -1,0 +1,24 @@
+净土视频工作台（Windows）
+
+检查课表、备份音视频和文字、出标清并上传、处理单个新片。
+网页运营后台（/ops/）只负责上传，不再在浏览器里转码。
+
+开发时运行（本仓库）
+  1. 把 ffmpeg.exe、ffprobe.exe 放在本文件夹，或放在 ffmpeg 子目录
+  2. 在本文件夹执行：py -3 jx_video_helper.py
+
+打包给师兄用
+  在本文件夹执行：py -3 build.py
+  生成 dist/jingtu-video-helper.zip，上传到 R2 的 media/jingtu-video-helper.zip
+
+怎么用
+  1. 下载压缩包后解压整个文件夹，打开 jx-video-helper.exe（窗口标题「净土视频工作台」）
+  2. 网站默认 https://jingtu.jianxing.xin，媒体默认 https://media.huidengjingtu.win，填运营密码后登录
+  3. 选好本地备份目录
+  4. 「课表检查」看每课有没有视频、编码是否合适、本地备份、标清
+  5. 「备份」下载缺的课；「出标清并上传」给旧课补 480p；「单文件处理」处理新片并上传
+  6. 「切割」一盘拆多课
+
+若 Windows 提示「已保护你的电脑」：更多信息 → 仍要运行；或右键 exe → 属性 → 解除锁定。
+
+不要和网页后台同时点「保存到服务器」。

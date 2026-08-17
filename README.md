@@ -58,6 +58,39 @@ wrangler d1 execute jingtu-app --remote --file=migrations/0002_feedback.sql
 - 运营后台 `/ops/` 内「问题反馈」折叠面板：筛选 / 列表 / 改状态
 - D1 表 `feedback`：`id / type / content / email / created_at / status`
 
+## 前端 Faststart 处理
+
+- 文件：`public/mp4-faststart.js`（保留供其他场景；运营上传已不再使用浏览器转码）
+
+## 净土视频工作台（Windows）
+
+- 源码：`tools/jx-video-helper/`（exe / ffmpeg / 打包结果不入库）
+- 打包：`cd tools/jx-video-helper && py -3 build.py` → `dist/jingtu-video-helper.zip`
+- 上传到 R2：`media/jingtu-video-helper.zip`
+- 运营下载：`/ops/` 登录框下方，或进入某一课视频区；链接 `/api/download?path=media/jingtu-video-helper.zip`
+- 默认网站 `https://jingtu.jianxing.xin`，媒体 `https://media.huidengjingtu.win`
+- 网页运营只负责上传，转码/出标清/切割在 Windows 工具完成
+
+## 音视频断点续看
+
+- 基于 localStorage 纯前端方案，无需后端
+- 在学修页面（`src/pages/mod/learn.astro`）存储和恢复播放进度
+- 每个视频独立记录，用户换设备后进度不同步（仅限本地浏览器）
+
+## 运营后台布局
+
+运营后台 `/ops/` 顶部 tabs 布局：
+
+| Tab | 说明 |
+|------|------|
+| 学修 | 课程编辑（模块/章节/课程） |
+| 参考书籍 | 参考资料管理 |
+| 公众号好文 | 文章集合管理 |
+| 问答索引 | 问答索引管理 |
+| 问题反馈 | 用户反馈查看与处理 |
+
+点击 tab 后下方显示对应内容，使用 Flexbox 实现并排布局。
+
 ## 与见行的关系
 
 两条产品线并行：改功能以各自源码为准。若要跟见行新能力对齐，可再从见行复制合并，不要在见行仓库里直接改净土。

@@ -192,7 +192,14 @@
   }
 
   async function api(url, options = {}) {
-    const res = await fetch(url, { credentials: 'same-origin', ...options });
+    let res;
+    try {
+      res = await fetch(url, { credentials: 'same-origin', ...options });
+    } catch (e) {
+      const err = new Error(`网络请求失败 (${url}): ${e.message}`);
+      err.code = 'NETWORK';
+      throw err;
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const err = new Error(data.error || `请求失败 ${res.status}`);
@@ -206,6 +213,22 @@
 
   const MULTIPART_THRESHOLD = 20 * 1024 * 1024;
   const PART_SIZE = 8 * 1024 * 1024;
+
+  function mediaExt(file, fallback) {
+    const name = String(file?.name || '');
+    if (name.includes('.')) {
+      const ext = name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (ext) return ext;
+    }
+    return fallback;
+  }
+
+  /** 每次上传用新 key，长缓存才不会命中旧文件 */
+  function versionedKey(dirAndStem, ext) {
+    const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const stem = String(dirAndStem || 'file').replace(/\/+$/, '');
+    return `${stem}-${stamp}.${ext}`;
+  }
 
   function mimeForUpload(key, file) {
     const name = String(key || file?.name || '').toLowerCase();
@@ -272,7 +295,8 @@
   }
 
   async function saveCatalog(opts = {}) {
-    const { silent = false, reason = '', force = false } = opts;
+    const { silent = false, reason = '', force = false, _autoRetryCount = 0 } = opts;
+    const autoRetryCount = _autoRetryCount;
     if (saving) return;
     saving = true;
     try {
@@ -287,10 +311,17 @@
         baseRev: catalog.rev ?? 0,
         force: !!force,
       };
+      let bodyStr;
+      try {
+        bodyStr = JSON.stringify(payload);
+      } catch (e) {
+        showMsg(saveMsg, '序列化失败：' + e.message, false);
+        throw e;
+      }
       const result = await api('/api/catalog', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: bodyStr,
       });
       if (result?.rev != null) catalog.rev = result.rev;
       setDirty(false);
@@ -303,12 +334,19 @@
         showMsg(saveMsg, e.message || '目录冲突', false);
         if (
           confirm(
-            `${e.message || '目录已被他人更新。'}\n\n是否重新加载服务器目录？\n（当前未保存的本地修改将丢失）`,
+            `${e.message || '目录已被他人更新。'}\n\n将自动重新加载服务器最新版本并重试保存（${autoRetryCount + 1}/3）。`,
           )
         ) {
           await loadCatalog();
+          if (autoRetryCount < 3) {
+            showMsg(saveMsg, `已重新加载，正在自动重试保存...`, false);
+            return saveCatalog({ ...opts, _autoRetryCount: autoRetryCount + 1 });
+          }
+          showMsg(saveMsg, '自动重试次数已达上限，请手动保存', false);
+          return;
         }
-        throw e;
+        showMsg(saveMsg, '已取消保存', false);
+        return;
       }
       if (e.code === 'NEED_CONFIRM' && !force) {
         const ok = confirm(
@@ -321,7 +359,7 @@
         showMsg(saveMsg, '已取消保存', false);
         return;
       }
-      showMsg(saveMsg, e.message || String(e), false);
+      showMsg(saveMsg, '保存失败：' + (e.message || String(e)), false);
       throw e;
     } finally {
       saving = false;
@@ -585,8 +623,9 @@
   function updateWorkspaceChrome() {
     const grid = $('ops-grid');
     grid?.classList.toggle('is-materials', sideMode === 'refs' || sideMode === 'articles');
-    document.querySelectorAll('.ops-ws-tab').forEach((btn) => {
-      btn.classList.toggle('is-active', btn.dataset.ws === sideMode);
+    // 更新 workspace 相关的 tab 激活状态
+    document.querySelectorAll('.ops-tab[data-group="workspace"]').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.tab === sideMode);
     });
     updateSaveButton();
     updateContextHeader();
@@ -1411,6 +1450,7 @@
             text: '',
             audioPath: '',
             videoPath: '',
+            videoPathSd: '',
           });
           setDirty(true);
           renderEditor();
@@ -1665,7 +1705,8 @@
             <p class="ops-label" style="margin:0;">视频</p>
             ${hasVideo ? '<span class="ops-status is-ok">已上传</span>' : '<span class="ops-status">未上传</span>'}
           </div>
-          <label class="ops-field">存储路径<input id="les-video-path" value="${escapeHtml(les.videoPath || '')}" /></label>
+          <label class="ops-field">高清路径<input id="les-video-path" value="${escapeHtml(les.videoPath || '')}" /></label>
+          <label class="ops-field">标清路径<input id="les-video-sd-path" value="${escapeHtml(les.videoPathSd || '')}" /></label>
           ${
             hasVideo && videoUrl
               ? `<div class="ops-preview"><video controls playsinline webkit-playsinline x5-playsinline preload="metadata" src="${escapeHtml(videoUrl)}"></video>
@@ -1675,22 +1716,26 @@
                 : `<p class="ops-empty ops-empty--sm">尚未上传视频。</p>`
           }
           <div class="ops-upload-panel">
-            <label class="ops-check">
-              <input type="checkbox" id="video-compress" />
-              <span>上传前转码为 H.264+AAC（推荐，iOS/苹果兼容，浏览器处理较慢）</span>
-            </label>
-            <label class="ops-check">
-              <input type="checkbox" id="video-compress-deep" />
-              <span>同时压画面到 720p（更慢，200MB 可能要几十分钟）</span>
-            </label>
+            <div class="ops-row" style="margin:0.15rem 0 0.35rem;">
+              <a class="btn btn--solid ops-mini" style="color:#fbf6e6;" href="/api/download?path=media/jingtu-video-helper.zip">下载净土视频工作台</a>
+              <a class="btn ops-mini" style="color:inherit;border-color:var(--line);" href="/tools/使用说明.txt" target="_blank" rel="noopener">使用说明</a>
+            </div>
             <p class="ops-hint">
-              建议：用小程序或电脑软件先转成 <strong>H.264 + AAC</strong> 再上传（更快、苹果微信才有声音）。
-              上面两项为网页备用，默认不勾选；勾选后首次还需下载约 25MB 组件，大视频请耐心等待或改用软件处理。
+              请先用电脑上的工作台处理好再上传，网页不再转码。
+              已是 480p 的片子请传到「高清」口（只保留一档）；另有标清时再传到「标清」口。
+              替换高清会清空旧标清，避免学员默默播到旧片。
             </p>
+            <p class="ops-label" style="margin:0.4rem 0 0.2rem;">上传高清</p>
             <input type="file" accept="video/*,.mp4" id="upload-video" />
             <div class="ops-upload-status" id="video-upload-status" hidden></div>
             <div class="ops-progress" id="video-progress" hidden>
               <div class="ops-progress-bar" id="video-progress-bar"></div>
+            </div>
+            <p class="ops-label" style="margin:0.8rem 0 0.2rem;">上传标清（可选）</p>
+            <input type="file" accept="video/*,.mp4" id="upload-video-sd" />
+            <div class="ops-upload-status" id="video-sd-upload-status" hidden></div>
+            <div class="ops-progress" id="video-sd-progress" hidden>
+              <div class="ops-progress-bar" id="video-sd-progress-bar"></div>
             </div>
           </div>
         </div>
@@ -1715,9 +1760,14 @@
       les.videoPath = e.target.value;
       setDirty(true);
     });
+    $('les-video-sd-path')?.addEventListener('input', (e) => {
+      les.videoPathSd = e.target.value;
+      setDirty(true);
+    });
 
     bindUpload('audio', mod, les);
     bindUpload('video', mod, les);
+    bindUpload('video-sd', mod, les);
   }
 
   function setUploadUi(kind, { pct, text, ok, error }) {
@@ -1740,61 +1790,184 @@
     }
   }
 
+  function readAscii(buf) {
+    const u8 = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+    return s;
+  }
+
+  async function inspectVideoFile(file) {
+    const headSize = Math.min(file.size, 65536);
+    const tailSize = Math.min(file.size, 2 * 1024 * 1024);
+    const head = readAscii(await file.slice(0, headSize).arrayBuffer());
+    const tail =
+      file.size > headSize
+        ? readAscii(await file.slice(Math.max(0, file.size - tailSize)).arrayBuffer())
+        : head;
+    const all = head + tail;
+    const moov = head.indexOf('moov');
+    const mdat = head.indexOf('mdat');
+    const faststart = moov >= 0 && (mdat < 0 || moov < mdat);
+    const hevc = /hvc1|hev1|hvcC/.test(all);
+    const avc = /avc1|avcC/.test(all);
+    const aac = /mp4a/.test(all);
+    const looksMp4 = /ftyp/.test(head);
+    let action = 'ready';
+    let title = '已适合上传';
+    let risk = '';
+    if (!looksMp4) {
+      action = 'transcode';
+      title = '转码为 H.264 + AAC';
+      risk = '当前不像常见 MP4，苹果/微信可能播不了，开播也可能很慢';
+    } else if (hevc && !avc) {
+      action = 'transcode';
+      title = '转成 H.264（现在是 H.265）';
+      risk = 'H.265 在苹果和微信网页里经常播不了';
+    } else if (avc && !aac) {
+      action = 'audio';
+      title = '只转音轨为 AAC';
+      risk = '苹果/微信里可能没有声音';
+    } else if (avc && aac && !faststart) {
+      action = 'faststart';
+      title = '加上 faststart';
+      risk = '开播会很慢（索引在文件尾，往往要先下载大半个文件）';
+    } else if (!avc) {
+      action = 'transcode';
+      title = '转码为 H.264 + AAC';
+      risk = '编码不确定，学员设备可能播不了或开播很慢';
+    } else if (!faststart) {
+      action = 'faststart';
+      title = '加上 faststart';
+      risk = '开播可能较慢';
+    }
+    return { action, title, risk, faststart };
+  }
+
+  function confirmVideoAdvice(report) {
+    return new Promise((resolve) => {
+      const prev = document.getElementById('ops-video-advice');
+      if (prev) prev.remove();
+      const box = document.createElement('div');
+      box.id = 'ops-video-advice';
+      box.className = 'ops-modal';
+      box.innerHTML = `
+        <div class="ops-modal__card" role="dialog" aria-labelledby="ops-video-advice-title">
+          <h3 id="ops-video-advice-title">建议先用净土视频工作台处理</h3>
+          <p>检查结果：建议<strong>${escapeHtml(report.title)}</strong>后再上传，以免${escapeHtml(report.risk)}。</p>
+          <p>请先下载 Windows 工具，在电脑上转好，再上传处理好的文件。若执意上传原文件，仍可以继续。</p>
+          <div class="ops-modal__actions">
+            <a class="btn btn--solid" style="color:#fbf6e6;" href="/api/download?path=media/jingtu-video-helper.zip">下载净土视频工作台</a>
+            <button type="button" class="btn" data-act="upload" style="color:inherit;border-color:var(--line);">仍要上传</button>
+            <button type="button" class="btn" data-act="cancel" style="color:inherit;border-color:var(--line);">取消</button>
+          </div>
+        </div>`;
+      const finish = (v) => {
+        box.remove();
+        resolve(v);
+      };
+      box.addEventListener('click', (e) => {
+        if (e.target === box) finish('cancel');
+        const act = e.target?.getAttribute?.('data-act');
+        if (act === 'upload' || act === 'cancel') finish(act);
+      });
+      document.body.appendChild(box);
+    });
+  }
+
+  function probeVideoHeight(file) {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      const done = (h) => {
+        URL.revokeObjectURL(url);
+        resolve(h || 0);
+      };
+      v.onloadedmetadata = () => done(v.videoHeight);
+      v.onerror = () => done(0);
+      setTimeout(() => done(0), 8000);
+      v.src = url;
+    });
+  }
+
   function bindUpload(kind, mod, les) {
     const input = $(`upload-${kind}`);
     if (!input) return;
     input.addEventListener('change', async () => {
-      let file = input.files?.[0];
+      const file = input.files?.[0];
       if (!file) return;
-      const field = kind === 'audio' ? 'audioPath' : 'videoPath';
-      const wantCompress = kind === 'video' && $('video-compress')?.checked;
-      const ext =
-        kind === 'video'
-          ? 'mp4'
-          : file.name.includes('.')
-            ? file.name.split('.').pop()
-            : 'mp3';
-      const key = les[field] || `${mod.slug}/${les.slug}.${ext}`;
-      les[field] = key;
-
-      let transcodeConfig = null;
-      if (kind === 'video') {
-        transcodeConfig = await window.JXTranscode?.askBeforeUpload?.(key, mod, les, file);
-      }
-
-      try {
-        if (wantCompress) {
-          if (typeof window.JXCompressVideo !== 'function') {
-            throw new Error('压缩组件尚未加载完成，请稍候再试，或取消勾选后直接上传。');
-          }
-          setUploadUi(kind, { pct: 0, text: '准备压缩…' });
-          showMsg(saveMsg, '正在压缩视频（方便手机观看）…', true);
-          const deep = !!$('video-compress-deep')?.checked;
-          if (deep && file.size > 80 * 1024 * 1024) {
-            const ok = confirm(
-              `该视频约 ${(file.size / 1024 / 1024).toFixed(0)}MB。浏览器深度压缩会非常慢（可能几十分钟）。\n\n确定继续？\n选“取消”将改为只转 AAC 音轨（快很多）。`,
-            );
-            if (!ok) {
-              const deepBox = $('video-compress-deep');
-              if (deepBox) deepBox.checked = false;
+      const isVideo = kind === 'video' || kind === 'video-sd';
+      if (isVideo) {
+        try {
+          const report = await inspectVideoFile(file);
+          if (report.action !== 'ready') {
+            const choice = await confirmVideoAdvice(report);
+            if (choice !== 'upload') {
+              input.value = '';
+              return;
             }
           }
-          file = await window.JXCompressVideo(file, {
-            deep: !!$('video-compress-deep')?.checked,
-            onStatus: (text) => setUploadUi(kind, { pct: null, text }),
-            onProgress: (pct) =>
-              setUploadUi(kind, {
-                pct,
-                text: `处理中… ${pct}%（请勿关闭页面）`,
-              }),
-          });
+        } catch (e) {
+          const ok = confirm(
+            `无法自动检查该视频（${e.message || e}）。\n建议先用「净土视频工作台」处理后再传。\n仍要直接上传吗？`,
+          );
+          if (!ok) {
+            input.value = '';
+            return;
+          }
         }
+      }
 
+      if (kind === 'video-sd' && !(les.videoPath && String(les.videoPath).trim())) {
+        alert('请先上传高清（若片子已经是 480p，请传到「高清」口，只保留一档）。');
+        input.value = '';
+        return;
+      }
+
+      let field = 'audioPath';
+      let keyStem = `${mod.slug}/${les.slug}`;
+      let label = '音频';
+      let clearSd = false;
+      if (kind === 'video') {
+        field = 'videoPath';
+        label = '高清视频';
+        const height = await probeVideoHeight(file);
+        const alreadySd = height > 0 && height <= 480;
+        const hadSd = !!(les.videoPathSd && String(les.videoPathSd).trim());
+        const replacing = !!(les.videoPath && String(les.videoPath).trim());
+        if (replacing && hadSd) {
+          const ok = confirm(
+            alreadySd
+              ? '将替换高清路径，并清空旧标清（新片已是 480p，只保留一档）。是否继续？'
+              : '将替换高清路径，并清空旧标清，避免学员默认仍播旧标清。是否继续？',
+          );
+          if (!ok) {
+            input.value = '';
+            return;
+          }
+        }
+        if (alreadySd || replacing) clearSd = true;
+        if (alreadySd) {
+          showMsg(saveMsg, `检测到约 ${height}p，将只保留一档（写入高清路径，不另建标清）。`, true);
+        }
+      } else if (kind === 'video-sd') {
+        field = 'videoPathSd';
+        keyStem = `${mod.slug}/${les.slug}-sd`;
+        label = '标清视频';
+      }
+
+      const ext = isVideo ? 'mp4' : mediaExt(file, 'mp3');
+      const key = versionedKey(keyStem, ext);
+      les[field] = key;
+      if (clearSd) les.videoPathSd = '';
+
+      try {
         setUploadUi(kind, {
           pct: 0,
           text: `准备上传：${file.name}（${(file.size / 1024 / 1024).toFixed(1)} MB）`,
         });
-        showMsg(saveMsg, `正在上传${kind === 'audio' ? '音频' : '视频'}…`, true);
+        showMsg(saveMsg, `正在上传${label}…`, true);
         await uploadFile(key, file, (done, total) => {
           const pct = Math.min(100, Math.round((done / total) * 100));
           setUploadUi(kind, {
@@ -1810,34 +1983,14 @@
         showMsg(saveMsg, '上传完成，正在自动保存目录…', true);
         await saveCatalog({ reason: `上传成功并已自动保存：${key}` });
         renderEditor();
-
-        if (kind === 'video' && transcodeConfig && !transcodeConfig.skip) {
-          setUploadUi(kind, {
-            pct: null,
-            text: `上传完成，已提交服务端转码任务（可离开页面，后台自动处理）`,
-            ok: true,
-          });
-          try {
-            await window.JXTranscode?.submitTask?.(transcodeConfig);
-          } catch (err) {
-            console.error('转码任务提交失败', err);
-          }
-        } else {
-          setUploadUi(kind, {
-            pct: null,
-            text: `上传完成并已保存：${key}`,
-            ok: true,
-          });
-        }
-      } catch (e) {
-        const msg = String(e.message || e);
         setUploadUi(kind, {
           pct: null,
-          text: wantCompress
-            ? `压缩失败：${msg}。可取消勾选「自动压缩」后直接上传原文件。`
-            : msg,
-          error: true,
+          text: `上传完成并已保存：${key}`,
+          ok: true,
         });
+      } catch (e) {
+        const msg = String(e.message || e);
+        setUploadUi(kind, { pct: null, text: msg, error: true });
         showMsg(saveMsg, msg, false);
       } finally {
         input.value = '';
@@ -1901,12 +2054,17 @@
     if (hint) hint.textContent = open ? '收起' : '展开';
   });
 
-  document.querySelectorAll('.ops-ws-tab').forEach((btn) => {
+  // workspace 相关的 tab 切换（仅在 ops-app.js 未处理时作为备用）
+  // 主要切换逻辑在 index.astro 的内联脚本中处理
+  document.querySelectorAll('.ops-tab[data-group="workspace"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const mode = btn.dataset.ws || 'module';
+      const mode = btn.dataset.tab || 'module';
       switchWorkspace(mode);
     });
   });
+
+  // 暴露到全局，供 index.astro 的 tab 切换逻辑调用
+  window.switchWorkspace = switchWorkspace;
 
   $('btn-add-module')?.addEventListener('click', () => {
     if (!catalog) {

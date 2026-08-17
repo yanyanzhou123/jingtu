@@ -47,7 +47,9 @@ async function readArticles(env: Env): Promise<{ rev: number; collections: any[]
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const data = await readArticles(context.env);
-    return json(data);
+    const res = json(data);
+    res.headers.set('Cache-Control', 'no-store');
+    return res;
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

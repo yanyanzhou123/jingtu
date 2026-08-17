@@ -36,3 +36,13 @@ zen-lesson.html
 
 # CI workflows (push needs workflow scope; add later)
 .github/workflows/
+
+# local video helper (exe / ffmpeg / build output not in repo)
+tools/jx-video-helper/ffmpeg/
+tools/jx-video-helper/dist/
+tools/jx-video-helper/build/
+tools/jx-video-helper/backup/
+tools/jx-video-helper/config.json
+tools/jx-video-helper/*.spec
+tools/jx-video-helper/__pycache__/
+tools/jx-video-helper/*.zip

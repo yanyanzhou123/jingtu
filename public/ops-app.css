@@ -1,4 +1,4 @@
-.ops-panel { padding: 1.5rem 0; border-top: 1px solid var(--line); }
+﻿.ops-panel { padding: 1.5rem 0; border-top: 1px solid var(--line); }
 .ops-label {
   font-family: var(--font-sans);
   font-size: 0.82rem;
@@ -710,320 +710,35 @@
   transition: width 0.15s ease;
 }
 
-/* ============ 视频转码面板 ============ */
-.transcode-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 0.5rem;
-}
-.transcode-tab {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.5);
-  color: var(--ink);
-  padding: 0.4rem 1rem;
-  font: inherit;
-  cursor: pointer;
-}
-.transcode-tab.is-active {
-  background: var(--jade);
-  color: #fff;
-  border-color: var(--jade);
-}
-.transcode-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-.transcode-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-.transcode-field label {
-  font-weight: 500;
-  font-size: 0.88rem;
-  color: var(--ink);
-}
-.transcode-field input,
-.transcode-field select {
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.6);
-  font: inherit;
-}
-.transcode-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
-}
-.transcode-hint {
-  font-size: 0.8rem;
-  color: #666;
-  margin: 0;
-}
-.transcode-split-points {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.transcode-split-point {
-  display: grid;
-  grid-template-columns: 1fr 2fr auto;
-  gap: 0.4rem;
-  align-items: center;
-}
-.transcode-split-point input {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.6);
-  font: inherit;
-}
-.tc-sp-del {
-  padding: 0.25rem 0.6rem !important;
-}
-.transcode-split-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-.transcode-list-actions {
-  display: flex;
-  gap: 0.8rem;
-  align-items: center;
-  margin-bottom: 0.8rem;
-}
-.tc-auto-refresh {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-}
-.transcode-jobs {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.transcode-empty {
-  text-align: center;
-  color: #666;
-  padding: 2rem 0;
-  margin: 0;
-}
-.tc-job {
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.5);
-  padding: 0.8rem;
-}
-.tc-job-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-.tc-job-status {
-  font-weight: 500;
-}
-.tc-job--is-ok .tc-job-status { color: #080; }
-.tc-job--is-error .tc-job-status { color: #c00; }
-.tc-job--is-running .tc-job-status { color: #1866c0; }
-.tc-job-body {
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-.tc-job-body p {
-  margin: 0.15rem 0;
-}
-.tc-job-path {
-  color: #444;
-  word-break: break-all;
-}
-.tc-job-mode {
-  color: #666;
-}
-.tc-job-segments {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.6rem;
-  background: rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.tc-segment {
-  display: block;
-  font-size: 0.82rem;
-  color: #555;
-}
-.tc-job-error {
-  color: #c00 !important;
-  font-weight: 500;
-}
-.tc-job-bar {
-  margin-top: 0.6rem;
-  height: 4px;
-  background: rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-.tc-job-bar-fill {
-  height: 100%;
-  background: var(--jade);
-  transition: width 0.3s ease;
-}
-.tc-job-progress {
-  font-weight: 500;
-  color: var(--jade);
-}
-
-/* ============ 转码弹窗 ============ */
-.tc-modal {
+.ops-modal {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 80;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.tc-modal-bg {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-.tc-modal-box {
-  position: relative;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-.tc-modal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid var(--line);
-}
-.tc-modal-head h3 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-.tc-modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #999;
-}
-.tc-modal-body {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.tc-info {
-  background: rgba(0, 0, 0, 0.03);
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
-  font-size: 0.88rem;
-}
-.tc-info p {
-  margin: 0.3rem 0;
-}
-.tc-info code {
-  background: rgba(0, 0, 0, 0.08);
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 0.82rem;
-}
-.tc-option {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.tc-option-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.tc-option-item:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-.tc-option-item input {
-  accent-color: var(--jade);
-}
-.tc-split-config {
-  border: 1px solid var(--line);
-  border-radius: 6px;
   padding: 1rem;
+  background: rgba(30, 40, 36, 0.45);
 }
-.tc-split-hint {
-  margin: 0 0 0.8rem;
-  font-size: 0.85rem;
-  color: #666;
-}
-.tc-split-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.8rem;
-}
-.tc-split-row {
-  display: grid;
-  grid-template-columns: 1fr 2fr auto;
-  gap: 0.4rem;
-  align-items: center;
-}
-.tc-split-row input {
-  padding: 0.4rem 0.6rem;
+.ops-modal__card {
+  width: min(32rem, 100%);
+  padding: 1.15rem 1.2rem 1.2rem;
+  border-radius: 0.55rem;
+  background: #faf6e8;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  font: inherit;
+  box-shadow: 0 16px 40px rgba(30, 61, 52, 0.18);
 }
-.tc-sp-del {
-  padding: 0.25rem 0.6rem !important;
+.ops-modal__card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
 }
-.tc-split-actions {
+.ops-modal__card p {
+  margin: 0 0 0.7rem;
+  line-height: 1.55;
+}
+.ops-modal__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-}
-.tc-modal-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.8rem;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--line);
-}
-.tc-modal-msg {
-  padding: 0.8rem 1.5rem;
-  font-size: 0.9rem;
-  text-align: center;
-  border-top: 1px solid var(--line);
-}
-.tc-modal-msg[hidden] {
-  display: none;
-}
-
-.tc-video-info-box {
-  background: rgba(0, 0, 0, 0.04);
-  padding: 0.8rem 1rem;
-  border-radius: 6px;
-  font-size: 0.88rem;
-}
-.tc-video-info-box p {
-  margin: 0.3rem 0;
-}
-.tc-video-info-box code {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.82rem;
+  margin-top: 0.85rem;
 }

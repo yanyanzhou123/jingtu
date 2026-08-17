@@ -257,6 +257,9 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const res = json(body);
     if (lite) {
       res.headers.set('Cache-Control', 'public, max-age=60');
+    } else {
+      // 完整版（ops 后台用）禁缓存，保证删除/新增后立即生效
+      res.headers.set('Cache-Control', 'no-store');
     }
     return res;
   } catch (e) {
@@ -341,7 +344,9 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
   }
 
   if (currentRaw != null) {
-    await backupCurrent(context.env, currentRaw, currentRev);
+    context.waitUntil(
+      backupCurrent(context.env, currentRaw, currentRev).catch(() => null),
+    );
   }
 
   migrated.rev = currentRev + 1;

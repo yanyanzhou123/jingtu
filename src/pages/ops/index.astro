@@ -10,6 +10,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p>
         学修为主要内容：左侧选模块，模块内为章节 → 课；进入课后再编辑文字、上传音视频。
         参考书籍与公众号好文在上方分区进入，属于材料区，不计入学修课表。
+        网页只负责上传，不再在浏览器里转码。
       </p>
     </div>
   </div>
@@ -25,39 +26,102 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         <p id="login-msg" class="ops-msg" hidden></p>
       </div>
 
+      <div class="ops-panel" id="ops-helper-dl">
+        <p class="ops-label">净土视频工作台</p>
+        <p class="ops-hint" style="margin-top:0;">
+          转码、出标清、切割请在 Windows 电脑上做。下载后解压整个文件夹，打开
+          <code>jx-video-helper.exe</code>
+          （窗口标题是「净土视频工作台」）。不要只拷走其中一个文件。
+        </p>
+        <div class="ops-row" style="margin:0.35rem 0 0;">
+          <a class="btn btn--solid" style="color:#fbf6e6;" href="/api/download?path=media/jingtu-video-helper.zip">下载净土视频工作台</a>
+          <a class="btn" style="color:inherit;border-color:var(--line);" href="/tools/使用说明.txt" target="_blank" rel="noopener">使用说明</a>
+        </div>
+      </div>
+
       <div id="ops-app" hidden>
-        <div class="ops-workspace-tabs" role="tablist" aria-label="运营分区">
-          <button type="button" class="ops-ws-tab is-active" data-ws="module">学修</button>
-          <button type="button" class="ops-ws-tab" data-ws="refs">参考书籍</button>
-          <button type="button" class="ops-ws-tab" data-ws="articles">公众号好文</button>
+        <div class="ops-header-row">
+          <div class="ops-tabs" role="tablist" aria-label="运营分区">
+            <button type="button" class="ops-tab is-active" data-tab="module" data-group="workspace">学修</button>
+            <button type="button" class="ops-tab" data-tab="refs" data-group="workspace">参考书籍</button>
+            <button type="button" class="ops-tab" data-tab="articles" data-group="workspace">公众号好文</button>
+            <span class="ops-tab-sep"></span>
+            <button type="button" class="ops-tab" data-tab="passages" data-group="info">问答索引</button>
+            <button type="button" class="ops-tab" data-tab="feedback" data-group="info">问题反馈</button>
+          </div>
         </div>
 
-        <div class="ops-top-panels">
-          <div id="passages-panel" class="ops-cards-panel ops-cards-panel--collapsible">
-            <button type="button" class="ops-cards-toggle" id="btn-passages-toggle" aria-expanded="false">
+        <!-- 学修/参考书籍/公众号好文 主内容区 -->
+        <div id="workspace-panel" class="ops-tab-panel is-active" data-panel="module">
+          <div class="ops-sticky-bar">
+            <div id="dirty-banner" class="ops-dirty" hidden>
+              有未保存的修改，请点「保存到服务器」。上传成功会自动保存。多人同时编辑时若冲突会提示重新加载；保存前自动备份上一版。
+            </div>
+            <div class="ops-toolbar">
+              <div class="ops-toolbar__ctx">
+                <span class="ops-toolbar__label" id="ops-ctx-label">学修</span>
+                <strong id="ops-ctx-title">请选择模块</strong>
+              </div>
+              <div class="ops-toolbar__actions">
+                <button type="button" id="btn-save" class="btn btn--solid" style="color:#fbf6e6;">保存到服务器</button>
+                <button type="button" id="btn-reload" class="btn" style="color:inherit;border-color:var(--line);">重新加载</button>
+                <button type="button" id="logout-btn" class="btn" style="color:inherit;border-color:var(--line);">退出</button>
+              </div>
+              <span id="save-msg" class="ops-msg" style="margin:0;"></span>
+            </div>
+          </div>
+
+          <div class="ops-grid" id="ops-grid">
+            <aside class="ops-side" id="ops-side">
+              <div class="ops-side-head">
+                <p class="ops-label" style="margin:0;">学修模块</p>
+                <button type="button" id="btn-add-module" class="btn ops-mini" style="color:inherit;border-color:var(--line);">+ 添加</button>
+              </div>
+              <div class="ops-side-filters">
+                <input type="search" id="mod-search" class="ops-side-search" placeholder="搜索模块…" autocomplete="off" />
+                <select id="mod-status-filter" class="ops-side-select" aria-label="按状态筛选">
+                  <option value="all">全部状态</option>
+                  <option value="open">仅开放中</option>
+                  <option value="coming">仅即将开放</option>
+                </select>
+              </div>
+              <div id="module-list" class="ops-nav"></div>
+            </aside>
+
+            <div class="ops-main" id="module-editor">
+              <p class="ops-empty">请选择左侧模块</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 问答索引 -->
+        <div id="passages-panel" class="ops-tab-panel" data-panel="passages" hidden>
+          <div class="ops-info-panel">
+            <div class="ops-info-panel-header">
               <strong>问答索引（向量）</strong>
-              <span id="passages-summary" class="ops-cards-summary">加载中…</span>
-              <span class="ops-cards-toggle__hint">展开</span>
-            </button>
-            <div class="ops-cards-body" id="passages-body" hidden>
-              <p class="ops-cards-hint">
+              <span id="passages-summary" class="ops-info-summary">加载中…</span>
+            </div>
+            <div class="ops-info-panel-body" id="passages-body">
+              <p class="ops-info-hint">
                 解惑已改用段落向量混合检索。保存课文后会自动增量重建；也可点下方按钮手动预热。
               </p>
-              <div class="ops-cards-actions">
+              <div class="ops-info-actions">
                 <button type="button" id="btn-passages-warm" class="btn ops-mini" style="color:inherit;border-color:var(--line);">重建/预热一批</button>
                 <button type="button" id="btn-passages-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新状态</button>
               </div>
               <p id="passages-msg" class="ops-msg" hidden style="margin:0.5rem 0 0;"></p>
             </div>
           </div>
+        </div>
 
-          <div id="feedback-panel" class="ops-cards-panel ops-cards-panel--collapsible">
-            <button type="button" class="ops-cards-toggle" id="btn-feedback-toggle" aria-expanded="false">
+        <!-- 问题反馈 -->
+        <div id="feedback-panel" class="ops-tab-panel" data-panel="feedback" hidden>
+          <div class="ops-info-panel">
+            <div class="ops-info-panel-header">
               <strong>问题反馈</strong>
-              <span id="feedback-summary" class="ops-cards-summary">未加载</span>
-              <span class="ops-cards-toggle__hint">展开</span>
-            </button>
-            <div class="ops-cards-body" id="feedback-body" hidden>
+              <span id="feedback-summary" class="ops-info-summary">未加载</span>
+            </div>
+            <div class="ops-info-panel-body" id="feedback-body">
               <div class="fb-ops-filters">
                 <select id="fb-filter-status" aria-label="按状态筛选">
                   <option value="">全部状态</option>
@@ -79,55 +143,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             </div>
           </div>
         </div>
-
-        <div class="ops-sticky-bar">
-          <div id="dirty-banner" class="ops-dirty" hidden>
-            有未保存的修改，请点「保存到服务器」。上传成功会自动保存。多人同时编辑时若冲突会提示重新加载；保存前自动备份上一版。
-          </div>
-          <div class="ops-toolbar">
-            <div class="ops-toolbar__ctx">
-              <span class="ops-toolbar__label" id="ops-ctx-label">学修</span>
-              <strong id="ops-ctx-title">请选择模块</strong>
-            </div>
-            <div class="ops-toolbar__actions">
-              <button type="button" id="btn-save" class="btn btn--solid" style="color:#fbf6e6;">保存到服务器</button>
-              <button type="button" id="btn-reload" class="btn" style="color:inherit;border-color:var(--line);">重新加载</button>
-              <button type="button" id="logout-btn" class="btn" style="color:inherit;border-color:var(--line);">退出</button>
-            </div>
-            <span id="save-msg" class="ops-msg" style="margin:0;"></span>
-          </div>
-        </div>
-
-         <div class="ops-grid" id="ops-grid">
-          <aside class="ops-side" id="ops-side">
-            <div class="ops-side-head">
-              <p class="ops-label" style="margin:0;">学修模块</p>
-              <button type="button" id="btn-add-module" class="btn ops-mini" style="color:inherit;border-color:var(--line);">+ 添加</button>
-            </div>
-            <div class="ops-side-filters">
-              <input type="search" id="mod-search" class="ops-side-search" placeholder="搜索模块…" autocomplete="off" />
-              <select id="mod-status-filter" class="ops-side-select" aria-label="按状态筛选">
-                <option value="all">全部状态</option>
-                <option value="open">仅开放中</option>
-                <option value="coming">仅即将开放</option>
-              </select>
-            </div>
-            <div id="module-list" class="ops-nav"></div>
-          </aside>
-
-          <div class="ops-main" id="module-editor">
-            <p class="ops-empty">请选择左侧模块</p>
-          </div>
-        </div>
       </div>
     </div>
   </section>
 </BaseLayout>
 
-<link rel="stylesheet" href="/ops-app.css?v=20260814d" />
-<script type="module" src="/ops-video-compress.js?v=20260813b"></script>
-<script src="/ops-app.js?v=20260814c" defer></script>
-<script src="/ops-transcode.js?v=20260814e" defer></script>
+<link rel="stylesheet" href="/ops-app.css?v=20260817b" />
+<script src="/ops-app.js?v=20260817b" defer></script>
 
 <style>
   .fb-ops-filters {
@@ -221,6 +243,98 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     font-family: var(--font-sans);
     color: var(--ink-soft);
     font-size: 0.9rem;
+  }
+  .ops-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 0.85rem;
+  }
+  .ops-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+  .ops-tab {
+    appearance: none;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.45);
+    color: var(--ink);
+    padding: 0.45rem 0.85rem;
+    font: inherit;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .ops-tab:hover {
+    border-color: var(--jade);
+    background: rgba(201, 162, 39, 0.1);
+  }
+  .ops-tab.is-active {
+    border-color: var(--jade);
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--jade-deep);
+    font-weight: 600;
+  }
+  .ops-tab-sep {
+    display: inline-block;
+    width: 1px;
+    height: 1.2rem;
+    background: var(--line);
+    margin: 0 0.4rem;
+  }
+  .ops-tab-panel {
+    margin-bottom: 1rem;
+  }
+  .ops-tab-panel[hidden] {
+    display: none;
+  }
+  .ops-info-panel {
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.5);
+  }
+  .ops-info-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: rgba(250, 246, 232, 0.6);
+  }
+  .ops-info-panel-header strong {
+    font-size: 0.95rem;
+    color: var(--ink);
+  }
+  .ops-info-summary {
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .ops-info-panel-body {
+    padding: 1rem;
+  }
+  .ops-info-hint {
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    margin: 0 0 0.75rem;
+  }
+  .ops-info-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 900px) {
+    .ops-header-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .ops-tabs {
+      width: 100%;
+    }
   }
 </style>
 
@@ -354,4 +468,60 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       setStatus(btn.dataset.id, btn.dataset.status);
     });
   })();
+
+  // 统一 Tab 切换逻辑
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.ops-tab');
+    const panels = document.querySelectorAll('.ops-tab-panel');
+
+    function switchTab(tabName) {
+      // 切换按钮状态
+      tabs.forEach((tab) => {
+        tab.classList.toggle('is-active', tab.dataset.tab === tabName);
+      });
+
+      // 切换面板显示
+      panels.forEach((panel) => {
+        const panelTab = panel.dataset.panel;
+        if (panelTab === tabName || (tabName === 'module' && panelTab === 'module')) {
+          panel.hidden = false;
+          panel.classList.add('is-active');
+        } else {
+          panel.hidden = true;
+          panel.classList.remove('is-active');
+        }
+      });
+
+      // 如果是 workspace 相关 tab，调用 ops-app.js 的切换函数
+      if (['module', 'refs', 'articles'].includes(tabName) && window.switchWorkspace) {
+        window.switchWorkspace(tabName);
+      }
+
+      // 如果是 feedback 面板，首次显示时加载数据
+      if (tabName === 'feedback') {
+        const fbBody = document.getElementById('feedback-body');
+        if (fbBody && fbBody.hidden === false) {
+          // 触发刷新按钮点击事件
+          const refreshBtn = document.getElementById('btn-fb-refresh');
+          if (refreshBtn) {
+            // 检查是否已经加载过
+            const list = document.getElementById('feedback-list');
+            if (list && list.textContent.includes('点「刷新」加载')) {
+              refreshBtn.click();
+            }
+          }
+        }
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        switchTab(tabName);
+      });
+    });
+
+    // 暴露到全局，供 ops-app.js 调用
+    window.switchTab = switchTab;
+  });
 </script>
