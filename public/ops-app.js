@@ -2054,14 +2054,7 @@
     if (hint) hint.textContent = open ? '收起' : '展开';
   });
 
-  // workspace 相关的 tab 切换（仅在 ops-app.js 未处理时作为备用）
-  // 主要切换逻辑在 index.astro 的内联脚本中处理
-  document.querySelectorAll('.ops-tab[data-group="workspace"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const mode = btn.dataset.tab || 'module';
-      switchWorkspace(mode);
-    });
-  });
+  // workspace 切换由 index.astro 的 switchTab → switchWorkspace 统一处理
 
   // 暴露到全局，供 index.astro 的 tab 切换逻辑调用
   window.switchWorkspace = switchWorkspace;

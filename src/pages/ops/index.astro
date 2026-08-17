@@ -115,135 +115,44 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         </div>
 
         <!-- 问题反馈 -->
-        <div id="feedback-panel" class="ops-tab-panel" data-panel="feedback" hidden>
-          <div class="ops-info-panel">
-            <div class="ops-info-panel-header">
-              <strong>问题反馈</strong>
-              <span id="feedback-summary" class="ops-info-summary">未加载</span>
-            </div>
-            <div class="ops-info-panel-body" id="feedback-body">
-              <div class="fb-ops-filters">
-                <select id="fb-filter-status" aria-label="按状态筛选">
-                  <option value="">全部状态</option>
-                  <option value="new">待处理</option>
-                  <option value="read">已读</option>
-                  <option value="archived">已归档</option>
-                </select>
-                <select id="fb-filter-type" aria-label="按类型筛选">
-                  <option value="">全部类型</option>
+        <div id="feedback-panel" class="ops-tab-panel fb-ops" data-panel="feedback" hidden>
+          <div class="fb-ops__toolbar">
+            <div class="fb-ops__filters">
+              <label class="fb-ops__field">
+                <span>类型</span>
+                <select id="fb-filter-type" class="ops-side-select" aria-label="按类型筛选">
+                  <option value="">全部</option>
                   <option value="practice">修行问题</option>
                   <option value="system">系统问题</option>
                 </select>
-                <button type="button" id="btn-fb-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新</button>
-                <span id="fb-ops-count" class="fb-ops-count"></span>
-              </div>
-              <div id="feedback-list" class="fb-ops-list">
-                <p class="fb-ops-empty">点「刷新」加载反馈列表。</p>
+              </label>
+              <div class="fb-ops__chips" role="group" aria-label="按状态筛选">
+                <button type="button" class="fb-chip is-active" data-status="">全部 <span id="fb-count-all">0</span></button>
+                <button type="button" class="fb-chip" data-status="new">待处理 <span id="fb-count-new">0</span></button>
+                <button type="button" class="fb-chip" data-status="read">已读 <span id="fb-count-read">0</span></button>
+                <button type="button" class="fb-chip" data-status="archived">已归档 <span id="fb-count-archived">0</span></button>
               </div>
             </div>
+            <button type="button" id="btn-feedback-refresh" class="btn ops-mini" style="color:inherit;border-color:var(--line);">刷新</button>
           </div>
+          <p id="feedback-summary" class="fb-ops__summary">登录后加载…</p>
+          <div class="fb-ops__board">
+            <div id="feedback-list" class="fb-ops__list" role="listbox" aria-label="反馈列表"></div>
+            <div id="feedback-detail" class="fb-ops__detail">
+              <p class="ops-empty" style="margin:0;">点左侧一条查看详情</p>
+            </div>
+          </div>
+          <p id="feedback-msg" class="ops-msg" hidden></p>
         </div>
       </div>
     </div>
   </section>
 </BaseLayout>
 
-<link rel="stylesheet" href="/ops-app.css?v=20260817b" />
-<script src="/ops-app.js?v=20260817b" defer></script>
+<link rel="stylesheet" href="/ops-app.css?v=20260817d" />
+<script src="/ops-app.js?v=20260817d" defer></script>
 
 <style>
-  .fb-ops-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    padding: 0.5rem 0 0.75rem;
-  }
-  .fb-ops-filters select {
-    padding: 0.4rem 0.55rem;
-    border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.7);
-    font: inherit;
-    font-size: 0.88rem;
-  }
-  .fb-ops-count {
-    font-family: var(--font-sans);
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-  }
-  .fb-ops-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .fb-ops-item {
-    border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.6);
-    padding: 0.65rem 0.8rem;
-  }
-  .fb-ops-item.is-new {
-    border-left: 3px solid var(--jade);
-  }
-  .fb-ops-item__head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 0.8rem;
-    align-items: baseline;
-    font-family: var(--font-sans);
-    font-size: 0.82rem;
-    color: var(--ink-soft);
-    margin-bottom: 0.35rem;
-  }
-  .fb-ops-item__type {
-    padding: 0.1rem 0.45rem;
-    border: 1px solid var(--jade);
-    color: var(--jade-deep);
-    font-size: 0.78rem;
-  }
-  .fb-ops-item__type.is-system {
-    border-color: #6b7280;
-    color: #4b5563;
-  }
-  .fb-ops-item__email {
-    color: var(--ink-soft);
-  }
-  .fb-ops-item__content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    line-height: 1.7;
-    margin: 0.25rem 0 0.5rem;
-  }
-  .fb-ops-item__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    align-items: center;
-  }
-  .fb-ops-status-btn {
-    appearance: none;
-    border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.6);
-    color: var(--ink-soft);
-    padding: 0.3rem 0.6rem;
-    font: inherit;
-    font-size: 0.82rem;
-    cursor: pointer;
-  }
-  .fb-ops-status-btn:hover {
-    border-color: var(--jade);
-    color: var(--jade-deep);
-  }
-  .fb-ops-status-btn.is-current {
-    border-color: var(--jade);
-    background: rgba(201, 162, 39, 0.15);
-    color: var(--jade-deep);
-    cursor: default;
-  }
-  .fb-ops-empty {
-    font-family: var(--font-sans);
-    color: var(--ink-soft);
-    font-size: 0.9rem;
-  }
   .ops-header-row {
     display: flex;
     align-items: center;
@@ -339,134 +248,250 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 </style>
 
 <script is:inline>
+  // 问题反馈：列表 + 详情分栏
   (() => {
-    const TYPE_LABELS = { practice: '修行问题', system: '系统问题' };
-    const STATUS_LABELS = { new: '待处理', read: '已读', archived: '已归档' };
+    const TYPE_LABEL = { practice: '修行问题', system: '系统问题' };
+    const STATUS_LABEL = { new: '待处理', read: '已读', archived: '已归档' };
 
-    const toggleBtn = document.getElementById('btn-feedback-toggle');
-    const body = document.getElementById('feedback-body');
-    const hint = toggleBtn?.querySelector('.ops-cards-toggle__hint');
-    const list = document.getElementById('feedback-list');
     const summary = document.getElementById('feedback-summary');
-    const countEl = document.getElementById('fb-ops-count');
-    const statusFilter = document.getElementById('fb-filter-status');
-    const typeFilter = document.getElementById('fb-filter-type');
-    const refreshBtn = document.getElementById('btn-fb-refresh');
+    const listEl = document.getElementById('feedback-list');
+    const detailEl = document.getElementById('feedback-detail');
+    const msgEl = document.getElementById('feedback-msg');
+    const typeSel = document.getElementById('fb-filter-type');
+    const refreshBtn = document.getElementById('btn-feedback-refresh');
+    const appBox = document.getElementById('ops-app');
+    const chips = Array.from(document.querySelectorAll('.fb-chip[data-status]'));
 
+    let allItems = [];
+    let statusFilter = '';
+    let selectedId = null;
     let loaded = false;
     let loading = false;
 
     function escapeHtml(s) {
-      return String(s).replace(/[&<>"']/g, (c) =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]),
-      );
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
-    function fmtTime(iso) {
-      if (!iso) return '';
+    function formatTime(iso) {
       try {
-        return new Date(iso).toLocaleString('zh-CN', { hour12: false });
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso || '';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       } catch {
-        return iso;
+        return iso || '';
       }
     }
 
-    async function loadList() {
+    function excerpt(text) {
+      const t = String(text || '').replace(/\s+/g, ' ').trim();
+      return t.length > 42 ? `${t.slice(0, 42)}…` : t;
+    }
+
+    function setMsg(text, isErr) {
+      msgEl.textContent = text || '';
+      msgEl.hidden = !text;
+      msgEl.classList.toggle('is-error', !!isErr);
+      msgEl.classList.toggle('is-ok', !!text && !isErr);
+    }
+
+    function counts() {
+      return {
+        all: allItems.length,
+        new: allItems.filter((it) => it.status === 'new').length,
+        read: allItems.filter((it) => it.status === 'read').length,
+        archived: allItems.filter((it) => it.status === 'archived').length,
+      };
+    }
+
+    function filtered() {
+      return allItems.filter((it) => {
+        if (typeSel.value && it.type !== typeSel.value) return false;
+        if (statusFilter && it.status !== statusFilter) return false;
+        return true;
+      });
+    }
+
+    function updateStats() {
+      const c = counts();
+      const set = (id, n) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(n);
+      };
+      set('fb-count-all', c.all);
+      set('fb-count-new', c.new);
+      set('fb-count-read', c.read);
+      set('fb-count-archived', c.archived);
+      chips.forEach((btn) => {
+        btn.classList.toggle('is-active', (btn.dataset.status || '') === statusFilter);
+      });
+      if (!loaded) {
+        summary.textContent = '登录后加载…';
+        return;
+      }
+      const shown = filtered().length;
+      const bits = [`共 ${c.all} 条`];
+      if (c.new) bits.push(`待处理 ${c.new}`);
+      if (typeSel.value || statusFilter) bits.push(`当前列出 ${shown} 条`);
+      summary.textContent = bits.join(' · ');
+    }
+
+    function statusButtons(it) {
+      const targets = [];
+      if (it.status !== 'new') targets.push(['new', '标为待处理']);
+      if (it.status !== 'read') targets.push(['read', '标为已读']);
+      if (it.status !== 'archived') targets.push(['archived', '归档']);
+      return targets
+        .map(
+          ([s, label]) =>
+            `<button type="button" class="btn ops-mini fb-status-btn" data-id="${escapeHtml(it.id)}" data-status="${s}" style="color:inherit;border-color:var(--line);">${label}</button>`,
+        )
+        .join('');
+    }
+
+    function renderDetail(it) {
+      if (!it) {
+        detailEl.innerHTML = '<p class="ops-empty" style="margin:0;">点左侧一条查看详情</p>';
+        return;
+      }
+      detailEl.innerHTML = `
+        <article class="fb-detail">
+          <dl class="fb-detail__meta">
+            <div><dt>状态</dt><dd><span class="fb-tag fb-tag--${escapeHtml(it.status)}">${escapeHtml(STATUS_LABEL[it.status] || it.status)}</span></dd></div>
+            <div><dt>类型</dt><dd><span class="fb-tag fb-tag-type--${escapeHtml(it.type)}">${escapeHtml(TYPE_LABEL[it.type] || it.type)}</span></dd></div>
+            <div><dt>提交时间</dt><dd>${escapeHtml(formatTime(it.created_at))}</dd></div>
+            <div><dt>联系邮箱</dt><dd><a href="mailto:${escapeHtml(it.email)}">${escapeHtml(it.email)}</a></dd></div>
+          </dl>
+          <div class="fb-detail__body">
+            <p class="ops-label" style="margin:0 0 0.35rem;">反馈内容</p>
+            <div class="fb-detail__content">${escapeHtml(it.content).replace(/\n/g, '<br>')}</div>
+          </div>
+          <div class="fb-detail__actions">${statusButtons(it)}</div>
+        </article>`;
+    }
+
+    function renderList() {
+      updateStats();
+      const items = filtered();
+      if (!items.length) {
+        listEl.innerHTML = `<p class="ops-empty" style="margin:0;">${loaded ? '暂无符合筛选的反馈' : '加载中…'}</p>`;
+        renderDetail(null);
+        return;
+      }
+      if (!items.some((it) => it.id === selectedId)) selectedId = items[0].id;
+      listEl.innerHTML = items
+        .map((it) => {
+          const active = it.id === selectedId ? ' is-active' : '';
+          return `<button type="button" class="fb-row fb-row--${escapeHtml(it.status)}${active}" data-id="${escapeHtml(it.id)}" role="option" aria-selected="${it.id === selectedId}">
+            <span class="fb-row__top">
+              <span class="fb-tag fb-tag--${escapeHtml(it.status)}">${escapeHtml(STATUS_LABEL[it.status] || it.status)}</span>
+              <span class="fb-tag fb-tag-type--${escapeHtml(it.type)}">${escapeHtml(TYPE_LABEL[it.type] || it.type)}</span>
+              <span class="fb-row__time">${escapeHtml(formatTime(it.created_at))}</span>
+            </span>
+            <span class="fb-row__email">${escapeHtml(it.email)}</span>
+            <span class="fb-row__excerpt">${escapeHtml(excerpt(it.content))}</span>
+          </button>`;
+        })
+        .join('');
+      renderDetail(items.find((it) => it.id === selectedId) || null);
+    }
+
+    async function load() {
       if (loading) return;
       loading = true;
-      summary.textContent = '加载中…';
-      list.innerHTML = '<p class="fb-ops-empty">加载中…</p>';
-      const params = new URLSearchParams();
-      if (statusFilter.value) params.set('status', statusFilter.value);
-      if (typeFilter.value) params.set('type', typeFilter.value);
+      setMsg('');
+      listEl.innerHTML = '<p class="ops-empty" style="margin:0;">加载中…</p>';
       try {
-        const res = await fetch(`/api/feedback?${params.toString()}`, { credentials: 'same-origin' });
+        const res = await fetch('/api/feedback', { cache: 'no-store', credentials: 'same-origin' });
         if (res.status === 401) {
-          list.innerHTML = '<p class="fb-ops-empty">未登录或登录已过期，请先登录。</p>';
+          allItems = [];
+          loaded = false;
+          listEl.innerHTML = '<p class="ops-empty" style="margin:0;">未登录或登录已过期，请先登录。</p>';
+          renderDetail(null);
           summary.textContent = '未登录';
           return;
         }
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || `加载失败（${res.status}）`);
-        }
-        renderList(data.items || []);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `加载失败（${res.status}）`);
+        allItems = data.items || [];
         loaded = true;
+        renderList();
       } catch (err) {
-        list.innerHTML = `<p class="fb-ops-empty">加载失败：${escapeHtml(String(err.message || err))}</p>`;
+        allItems = [];
+        loaded = false;
+        listEl.innerHTML = '';
+        renderDetail(null);
         summary.textContent = '加载失败';
+        setMsg(err.message || String(err), true);
       } finally {
         loading = false;
       }
     }
 
-    function renderList(items) {
-      const newCount = items.filter((x) => x.status === 'new').length;
-      summary.textContent = `共 ${items.length} 条${newCount ? ` · 待处理 ${newCount}` : ''}`;
-      countEl.textContent = `${items.length} 条`;
-      if (!items.length) {
-        list.innerHTML = '<p class="fb-ops-empty">暂无反馈。</p>';
-        return;
-      }
-      list.innerHTML = items
-        .map((it) => {
-          const isNew = it.status === 'new';
-          const typeClass = it.type === 'system' ? 'is-system' : '';
-          const buttons = ['new', 'read', 'archived']
-            .map((s) => {
-              const cur = s === it.status ? ' is-current' : '';
-              return `<button type="button" class="fb-ops-status-btn${cur}" data-id="${escapeHtml(it.id)}" data-status="${s}">${STATUS_LABELS[s]}</button>`;
-            })
-            .join('');
-          return `
-            <div class="fb-ops-item${isNew ? ' is-new' : ''}">
-              <div class="fb-ops-item__head">
-                <span class="fb-ops-item__type ${typeClass}">${escapeHtml(TYPE_LABELS[it.type] || it.type)}</span>
-                <span class="fb-ops-item__email">${escapeHtml(it.email || '')}</span>
-                <span>${fmtTime(it.created_at)}</span>
-              </div>
-              <p class="fb-ops-item__content">${escapeHtml(it.content || '')}</p>
-              <div class="fb-ops-item__actions">${buttons}</div>
-            </div>`;
-        })
-        .join('');
-    }
-
     async function setStatus(id, status) {
-      try {
-        const res = await fetch('/api/feedback', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ id, status }),
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) {
-          throw new Error(data.error || `更新失败（${res.status}）`);
-        }
-        await loadList();
-      } catch (err) {
-        alert(String(err.message || err));
-      }
+      const res = await fetch('/api/feedback', {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || `更新失败（${res.status}）`);
+      const row = allItems.find((it) => it.id === id);
+      if (row) row.status = status;
+      selectedId = id;
+      renderList();
     }
 
-    toggleBtn?.addEventListener('click', () => {
-      const open = body.hidden;
-      body.hidden = !open;
-      toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (hint) hint.textContent = open ? '收起' : '展开';
-      if (open && !loaded) loadList();
+    listEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.fb-row');
+      if (!row) return;
+      selectedId = row.dataset.id;
+      renderList();
     });
 
-    refreshBtn?.addEventListener('click', () => loadList());
-    statusFilter?.addEventListener('change', () => loadList());
-    typeFilter?.addEventListener('change', () => loadList());
-
-    list?.addEventListener('click', (e) => {
-      const btn = e.target.closest('.fb-ops-status-btn:not(.is-current)');
+    detailEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.fb-status-btn');
       if (!btn) return;
-      setStatus(btn.dataset.id, btn.dataset.status);
+      btn.disabled = true;
+      try {
+        await setStatus(btn.dataset.id, btn.dataset.status);
+        setMsg('已更新状态', false);
+      } catch (err) {
+        setMsg(err.message || String(err), true);
+      } finally {
+        btn.disabled = false;
+      }
     });
+
+    chips.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        statusFilter = btn.dataset.status || '';
+        renderList();
+      });
+    });
+    typeSel.addEventListener('change', renderList);
+    refreshBtn.addEventListener('click', () => {
+      loaded = false;
+      load();
+    });
+
+    window.addEventListener('ops-feedback-open', () => {
+      if (!loaded) load();
+      else renderList();
+    });
+
+    if (appBox) {
+      const mo = new MutationObserver(() => {
+        if (!appBox.hidden && !loaded) load();
+      });
+      mo.observe(appBox, { attributes: true, attributeFilter: ['hidden'] });
+    }
   })();
 
   // 统一 Tab 切换逻辑
@@ -475,21 +500,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     const panels = document.querySelectorAll('.ops-tab-panel');
 
     function switchTab(tabName) {
+      const workspaceTabs = ['module', 'refs', 'articles'];
       // 切换按钮状态
       tabs.forEach((tab) => {
         tab.classList.toggle('is-active', tab.dataset.tab === tabName);
       });
 
-      // 切换面板显示
+      // 切换面板显示（学修/参考书籍/好文共用 workspace-panel）
       panels.forEach((panel) => {
         const panelTab = panel.dataset.panel;
-        if (panelTab === tabName || (tabName === 'module' && panelTab === 'module')) {
-          panel.hidden = false;
-          panel.classList.add('is-active');
-        } else {
-          panel.hidden = true;
-          panel.classList.remove('is-active');
-        }
+        const show =
+          panelTab === tabName ||
+          (workspaceTabs.includes(tabName) && panelTab === 'module');
+        panel.hidden = !show;
+        panel.classList.toggle('is-active', show);
       });
 
       // 如果是 workspace 相关 tab，调用 ops-app.js 的切换函数
@@ -497,20 +521,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         window.switchWorkspace(tabName);
       }
 
-      // 如果是 feedback 面板，首次显示时加载数据
+      // 切换到问题反馈时加载列表
       if (tabName === 'feedback') {
-        const fbBody = document.getElementById('feedback-body');
-        if (fbBody && fbBody.hidden === false) {
-          // 触发刷新按钮点击事件
-          const refreshBtn = document.getElementById('btn-fb-refresh');
-          if (refreshBtn) {
-            // 检查是否已经加载过
-            const list = document.getElementById('feedback-list');
-            if (list && list.textContent.includes('点「刷新」加载')) {
-              refreshBtn.click();
-            }
-          }
-        }
+        window.dispatchEvent(new CustomEvent('ops-feedback-open'));
       }
     }
 
