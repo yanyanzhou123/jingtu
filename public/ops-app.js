@@ -1055,12 +1055,17 @@
         ? refs
             .map((ref, i) => {
               const hasFile = !!String(ref.path || '').trim();
+              const cat = String(ref.category || '').trim();
+              const catTag = cat
+                ? `<span class="ops-pick-tag">${escapeHtml(cat)}</span>`
+                : '';
               return `
                 <li class="ops-pick-item">
                   <button type="button" class="ops-pick-main" data-edit-ref="${i}">
                     <strong>${escapeHtml(ref.title || '未命名')}</strong>
                     <span>${escapeHtml(ref.meta || (hasFile ? '已上传文件' : '尚未上传'))}</span>
                   </button>
+                  ${catTag}
                 </li>`;
             })
             .join('')
@@ -1072,6 +1077,7 @@
           title: `新资料 ${refs.length + 1}`,
           meta: '',
           path: '',
+          category: '',
         });
         refsEditIndex = refs.length - 1;
         setDirty(true);
@@ -1099,6 +1105,14 @@
       <p class="ops-label">编辑书籍</p>
       <label class="ops-field">标题<input id="ref-title" value="${escapeHtml(ref.title || '')}" /></label>
       <label class="ops-field">说明 / 作者<input id="ref-meta" value="${escapeHtml(ref.meta || '')}" /></label>
+      <label class="ops-field">分类（如：仪轨、其他；留空则在前台归入「未分类」）<input id="ref-category" value="${escapeHtml(ref.category || '')}" placeholder="仪轨 / 其他 / 自定义" list="ref-category-list" /></label>
+      <datalist id="ref-category-list">
+        ${refs
+          .map((r) => String(r.category || '').trim())
+          .filter((v, idx, arr) => v && arr.indexOf(v) === idx)
+          .map((v) => `<option value="${escapeHtml(v)}"></option>`)
+          .join('')}
+      </datalist>
       <label class="ops-field">文件路径<input id="ref-path" value="${escapeHtml(ref.path || '')}" /></label>
       ${
         ref.path && url
@@ -1134,6 +1148,10 @@
     });
     $('ref-meta')?.addEventListener('input', (e) => {
       ref.meta = e.target.value;
+      setDirty(true);
+    });
+    $('ref-category')?.addEventListener('input', (e) => {
+      ref.category = e.target.value;
       setDirty(true);
     });
     $('ref-path')?.addEventListener('input', (e) => {

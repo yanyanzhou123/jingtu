@@ -17,7 +17,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   </article>
 </BaseLayout>
 
-<link rel="stylesheet" href="/yantao.css?v=20260805y" />
+<link rel="stylesheet" href="/yantao.css?v=20260918a" />
 <script src="/jx-catalog.js?v=20260731e" defer></script>
 <script is:inline>
 document.addEventListener('DOMContentLoaded', async () => {
@@ -29,25 +29,49 @@ document.addEventListener('DOMContentLoaded', async () => {
       body.innerHTML = '<p class="note">暂无参考书籍。</p>';
       return;
     }
-    body.innerHTML = `<ul class="lesson-list">${refs
-      .map((ref) => {
-        const url = JX.assetUrl(ref.path);
-        const id = ref.id ? ` id="${JX.escape(ref.id)}"` : '';
-        return `
-          <li${id}>
-            <a href="${url || '#'}" ${url ? 'target="_blank" rel="noopener"' : ''}>
-              <span class="lesson-list__num">PDF</span>
-              <div>
-                <h2 class="lesson-list__title">《${JX.escape(ref.title)}》</h2>
-                ${ref.meta ? `<p class="lesson-list__meta">${JX.escape(ref.meta)}</p>` : ''}
-                <p class="lesson-list__summary">${
-                  url ? '点击打开或下载' : '尚未上传文件，请在运营后台上传'
-                }</p>
-              </div>
-            </a>
-          </li>`;
-      })
-      .join('')}</ul>`;
+
+    // 按 category 分组：空字符串归入「未分类」
+    const groups = new Map();
+    for (const ref of refs) {
+      const cat = (String(ref.category || '').trim()) || '未分类';
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(ref);
+    }
+
+    const refItemHtml = (ref) => {
+      const url = JX.assetUrl(ref.path);
+      const id = ref.id ? ` id="${JX.escape(ref.id)}"` : '';
+      return `
+        <li${id}>
+          <a href="${url || '#'}" ${url ? 'target="_blank" rel="noopener"' : ''}>
+            <span class="lesson-list__num">PDF</span>
+            <div>
+              <h2 class="lesson-list__title">《${JX.escape(ref.title)}》</h2>
+              ${ref.meta ? `<p class="lesson-list__meta">${JX.escape(ref.meta)}</p>` : ''}
+              <p class="lesson-list__summary">${
+                url ? '点击打开或下载' : '尚未上传文件，请在运营后台上传'
+              }</p>
+            </div>
+          </a>
+        </li>`;
+    };
+
+    // 多个分组时按分组标题渲染；只有「未分类」一组时退化为单列表
+    let html = '';
+    if (groups.size === 1 && groups.has('未分类')) {
+      html = `<ul class="lesson-list">${refs.map(refItemHtml).join('')}</ul>`;
+    } else {
+      html = Array.from(groups.entries())
+        .map(([cat, list]) => {
+          return `
+            <section class="yt-group">
+              <h2 class="yt-group__title">${JX.escape(cat)}</h2>
+              <ul class="lesson-list">${list.map(refItemHtml).join('')}</ul>
+            </section>`;
+        })
+        .join('');
+    }
+    body.innerHTML = html;
     const hash = decodeURIComponent((location.hash || '').replace(/^#/, ''));
     if (hash) document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {

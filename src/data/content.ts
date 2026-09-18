@@ -21,6 +21,8 @@ export type ReferenceItem = {
   title: string;
   meta?: string;
   path: string;
+  /** 参考资料分类（自定义，如"仪轨"、"其他"）。为空时前台归入"未分类" */
+  category?: string;
 };
 
 export type LearningModule = {

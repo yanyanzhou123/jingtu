@@ -102,6 +102,7 @@ function migrateCatalog(data: any) {
         title: r.title || '未命名资料',
         meta: r.meta || '',
         path,
+        category: r.category ? String(r.category).trim() : '',
       });
     }
   }

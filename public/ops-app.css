@@ -1,4 +1,4 @@
-﻿.ops-panel { padding: 1.5rem 0; border-top: 1px solid var(--line); }
+.ops-panel { padding: 1.5rem 0; border-top: 1px solid var(--line); }
 .ops-label {
   font-family: var(--font-sans);
   font-size: 0.82rem;
@@ -257,6 +257,20 @@
   align-items: stretch;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.5);
+}
+
+.ops-pick-tag {
+  align-self: center;
+  justify-self: end;
+  margin: 0.55rem 0.75rem 0 0;
+  padding: 0.12rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.1);
+  color: #6a5308;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .ops-pick-main {

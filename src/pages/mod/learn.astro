@@ -71,7 +71,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       if (hasAudio) allowed.push('audio');
 
       let tab = params.get('tab') || '';
-      if (!allowed.includes(tab)) tab = 'text';
+      if (!allowed.includes(tab)) {
+        // URL 未指定 tab 时，按 video > audio > text 优先级自动选择
+        tab = ['video', 'audio', 'text'].find((k) => allowed.includes(k)) || 'text';
+      }
 
       // 若 URL 未指定 tab，仅 App 端用已保存进度的 lastTab
       let progressPrefetch = null;
